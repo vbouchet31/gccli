@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"regexp"
 
 	"github.com/bpauli/gccli/internal/outfmt"
 )
@@ -145,17 +144,16 @@ type WorkoutScheduleCmd struct {
 	Remove WorkoutScheduleRemoveCmd `cmd:"" help:"Remove a scheduled workout from the calendar."`
 }
 
-var dateRegexp = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
-
 // WorkoutScheduleAddCmd schedules a workout on a calendar date.
 type WorkoutScheduleAddCmd struct {
 	ID   string `arg:"" help:"Workout ID."`
-	Date string `arg:"" help:"Date to schedule (YYYY-MM-DD)."`
+	Date string `arg:"" help:"Date to schedule (YYYY-MM-DD, today, yesterday, 3d)."`
 }
 
 func (c *WorkoutScheduleAddCmd) Run(g *Globals) error {
-	if !dateRegexp.MatchString(c.Date) {
-		return fmt.Errorf("invalid date format %q: expected YYYY-MM-DD", c.Date)
+	date, err := resolveDate(c.Date)
+	if err != nil {
+		return err
 	}
 
 	client, err := resolveClient(g)
@@ -163,7 +161,7 @@ func (c *WorkoutScheduleAddCmd) Run(g *Globals) error {
 		return err
 	}
 
-	data, err := client.ScheduleWorkout(g.Context, c.ID, c.Date)
+	data, err := client.ScheduleWorkout(g.Context, c.ID, date)
 	if err != nil {
 		return fmt.Errorf("schedule workout: %w", err)
 	}
@@ -172,18 +170,19 @@ func (c *WorkoutScheduleAddCmd) Run(g *Globals) error {
 		return outfmt.WriteJSON(os.Stdout, json.RawMessage(data))
 	}
 
-	g.UI.Successf("Scheduled workout %s on %s", c.ID, c.Date)
+	g.UI.Successf("Scheduled workout %s on %s", c.ID, date)
 	return nil
 }
 
 // WorkoutScheduleListCmd lists scheduled workouts for a date.
 type WorkoutScheduleListCmd struct {
-	Date string `arg:"" help:"Date to list (YYYY-MM-DD)."`
+	Date string `arg:"" help:"Date to list (YYYY-MM-DD, today, yesterday, 3d). Defaults to today." optional:""`
 }
 
 func (c *WorkoutScheduleListCmd) Run(g *Globals) error {
-	if !dateRegexp.MatchString(c.Date) {
-		return fmt.Errorf("invalid date format %q: expected YYYY-MM-DD", c.Date)
+	date, err := resolveDate(c.Date)
+	if err != nil {
+		return err
 	}
 
 	client, err := resolveClient(g)
@@ -191,12 +190,12 @@ func (c *WorkoutScheduleListCmd) Run(g *Globals) error {
 		return err
 	}
 
-	data, err := client.GetCalendarWeek(g.Context, c.Date)
+	data, err := client.GetCalendarWeek(g.Context, date)
 	if err != nil {
 		return fmt.Errorf("list scheduled workouts: %w", err)
 	}
 
-	items, err := filterCalendarWorkouts(data, c.Date)
+	items, err := filterCalendarWorkouts(data, date)
 	if err != nil {
 		return err
 	}

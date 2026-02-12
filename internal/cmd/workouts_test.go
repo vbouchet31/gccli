@@ -537,7 +537,7 @@ func TestWorkoutScheduleAdd_InvalidDate(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
-	if !strings.Contains(err.Error(), "invalid date format") {
+	if !strings.Contains(err.Error(), "invalid date") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
@@ -588,7 +588,7 @@ func TestWorkoutScheduleList_InvalidDate(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
-	if !strings.Contains(err.Error(), "invalid date format") {
+	if !strings.Contains(err.Error(), "invalid date") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
