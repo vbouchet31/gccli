@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-02-12
+
+### Added
+
+- **`workouts schedule` subcommands** — Restructured `workouts schedule` from a single command into a command group with three subcommands:
+  - `workouts schedule add <id> <date>` — Schedule a workout on a calendar date (replaces `workouts schedule <id> <date>`)
+  - `workouts schedule list <date>` — List scheduled workouts for a date, with table/JSON/plain output
+  - `workouts schedule remove <id> [-f]` — Remove a scheduled workout from the calendar with confirmation prompt
+- **Calendar API** — New `GetCalendarWeek` API method to fetch calendar data from Garmin Connect
+- **Unschedule API** — New `UnscheduleWorkout` API method to delete scheduled workouts
+
+### Changed
+
+- `workouts schedule` is now a command group instead of a leaf command; use `workouts schedule add` for the previous scheduling behavior
+
 ## [0.1.0] - 2026-02-12
 
 Initial release of gccli — a fast, script-friendly CLI for Garmin Connect.
@@ -30,4 +45,5 @@ Initial release of gccli — a fast, script-friendly CLI for Garmin Connect.
 - **CI pipeline** — GitHub Actions for fmt-check, lint, and test
 - **Cross-platform builds** — macOS (amd64/arm64) and Linux (amd64/arm64) via goreleaser
 
+[0.2.0]: https://github.com/bpauli/gccli/releases/tag/v0.2.0
 [0.1.0]: https://github.com/bpauli/gccli/releases/tag/v0.1.0
