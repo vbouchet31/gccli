@@ -85,7 +85,7 @@ func workoutsTestServer(t *testing.T) *httptest.Server {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"calendarItems":[{"itemType":"workout","scheduleId":123,"workoutId":77,"title":"Morning Run","sportTypeKey":"running","date":"2026-02-12"},{"itemType":"activity","activityId":999,"date":"2026-02-12"},{"itemType":"workout","scheduleId":456,"workoutId":88,"title":"Evening Ride","sportTypeKey":"cycling","date":"2026-02-13"}]}`))
+		_, _ = w.Write([]byte(`{"calendarItems":[{"itemType":"workout","id":123,"workoutId":77,"title":"Morning Run","sportTypeKey":"running","date":"2026-02-12"},{"itemType":"activity","activityId":999,"date":"2026-02-12"},{"itemType":"workout","id":456,"workoutId":88,"title":"Evening Ride","sportTypeKey":"cycling","date":"2026-02-13"}]}`))
 	})
 
 	mux.HandleFunc("/workout-service/schedule/123", func(w http.ResponseWriter, r *http.Request) {
@@ -894,9 +894,9 @@ func TestFormatWorkoutRows(t *testing.T) {
 
 func TestFilterCalendarWorkouts(t *testing.T) {
 	data := json.RawMessage(`{"calendarItems":[
-		{"itemType":"workout","scheduleId":123,"workoutId":77,"title":"Morning Run","sportTypeKey":"running","date":"2026-02-12"},
+		{"itemType":"workout","id":123,"workoutId":77,"title":"Morning Run","sportTypeKey":"running","date":"2026-02-12"},
 		{"itemType":"activity","activityId":999,"date":"2026-02-12"},
-		{"itemType":"workout","scheduleId":456,"workoutId":88,"title":"Evening Ride","sportTypeKey":"cycling","date":"2026-02-13"}
+		{"itemType":"workout","id":456,"workoutId":88,"title":"Evening Ride","sportTypeKey":"cycling","date":"2026-02-13"}
 	]}`)
 
 	items, err := filterCalendarWorkouts(data, "2026-02-12")
@@ -946,7 +946,7 @@ func TestFilterCalendarWorkouts_InvalidJSON(t *testing.T) {
 func TestFormatCalendarWorkoutRows(t *testing.T) {
 	items := []map[string]any{
 		{
-			"scheduleId":   float64(123),
+			"id":           float64(123),
 			"workoutId":    float64(77),
 			"title":        "Morning Run",
 			"sportTypeKey": "running",

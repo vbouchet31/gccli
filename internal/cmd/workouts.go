@@ -257,7 +257,7 @@ func formatCalendarWorkoutRows(items []map[string]any) [][]string {
 	rows := make([][]string, 0, len(items))
 	for _, item := range items {
 		rows = append(rows, []string{
-			jsonString(item, "scheduleId"),
+			jsonString(item, "id"),
 			jsonString(item, "workoutId"),
 			jsonString(item, "title"),
 			jsonString(item, "sportTypeKey"),
