@@ -189,11 +189,6 @@
       .example h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
       .example p { font-size: 13px; color: var(--fg-muted); margin-bottom: 8px; }
 
-      /* ── Image placeholder ── */
-      .image-placeholder { margin-top: 48px; border-radius: var(--radius); border: 2px dashed var(--border); background: linear-gradient(180deg,#171d28 0%,#131820 100%); height: 320px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; }
-      .image-placeholder span { font-size: 14px; color: var(--fg-dim); }
-      .image-placeholder .ph-icon { font-size: 32px; color: var(--fg-dim); }
-
       /* ── Footer ── */
       footer { border-top: 1px solid var(--border); padding: 40px 0; }
       .footer-inner { max-width: 1120px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; }
@@ -776,10 +771,8 @@ gccli activity download "$latest" --format fit</pre>
           <div class="arch-card fade-in"><h4>internal/fit/</h4><p>FIT file binary encoding for weight and body composition uploads.</p></div>
         </div>
 
-        <!-- Image placeholder -->
-        <div class="image-placeholder fade-in">
-          <div class="ph-icon">&#x1f5bc;</div>
-          <span>Architecture diagram &mdash; coming soon</span>
+        <div class="fade-in" style="margin-top: 48px;">
+          <img src="img/architecture.webp" alt="gccli architecture diagram showing the layered design: CLI commands, API client, authentication, secrets, and cross-cutting utilities" width="1120" height="817" style="width: 100%; height: auto; border-radius: var(--radius); border: 1px solid var(--border);" loading="lazy" />
         </div>
 
       </div>
