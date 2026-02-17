@@ -18,6 +18,7 @@ type Globals struct {
 	Context context.Context
 	UI      *ui.UI
 	Account string
+	Parser  *kong.Kong
 }
 
 // CLI is the top-level command structure parsed by Kong.
@@ -43,6 +44,7 @@ type CLI struct {
 	Training   TrainingCmd   `cmd:"" help:"View training plans."`
 	Wellness   WellnessCmd   `cmd:"" help:"View wellness data."`
 	Reload     ReloadCmd     `cmd:"" help:"Request data reload for a date."`
+	Completion CompletionCmd `cmd:"" help:"Generate shell completion script."`
 }
 
 // Execute runs the CLI with the given arguments and version info.
@@ -126,6 +128,7 @@ func run(parser *kong.Kong, cli *CLI, args []string) (code int) {
 		Context: ctx,
 		UI:      u,
 		Account: account,
+		Parser:  parser,
 	}
 
 	if err := kongCtx.Run(g); err != nil {
