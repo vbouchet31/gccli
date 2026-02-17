@@ -324,6 +324,20 @@ make build
 ./bin/gccli --help</pre>
             </div>
             <div class="card fade-in">
+              <h3>Shell Completions</h3>
+              <pre class="code-block"><span class="dim"># Bash (~/.bashrc)</span>
+source &lt;(gccli completion bash)
+
+<span class="dim"># Zsh (~/.zshrc)</span>
+source &lt;(gccli completion zsh)
+
+<span class="dim"># Fish (~/.config/fish/config.fish)</span>
+gccli completion fish | source
+
+<span class="dim"># PowerShell ($PROFILE)</span>
+gccli completion powershell | Invoke-Expression</pre>
+            </div>
+            <div class="card fade-in">
               <h3>Development</h3>
               <pre class="code-block">make tools    <span class="dim"># Install dev tools</span>
 make test     <span class="dim"># Unit tests + race</span>
