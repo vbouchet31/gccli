@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-02-17
+
+### Added
+
+- **`completion` command** — Generate shell completions for bash, zsh, fish, and PowerShell (`gccli completion <shell>`)
+- **E2E workflow** — GitHub Actions workflow to run end-to-end tests on push to `main`, daily at 06:00 UTC, and via manual dispatch
+- **Dependabot** — Automated dependency update checks via Dependabot configuration
+
+### Fixed
+
+- **Garmin Connect API compatibility** — Adapted to endpoint and payload changes in the Garmin Connect API
+
+### Changed
+
+- Updated outdated Go module dependencies
+
+### Docs
+
+- Added community health files (contributing guide, code of conduct, etc.)
+- Added architecture diagram to docs page
+- Linked author name to GitHub profile in docs footer
+
 ## [0.2.0] - 2026-02-12
 
 ### Added
@@ -45,5 +67,6 @@ Initial release of gccli — a fast, script-friendly CLI for Garmin Connect.
 - **CI pipeline** — GitHub Actions for fmt-check, lint, and test
 - **Cross-platform builds** — macOS (amd64/arm64) and Linux (amd64/arm64) via goreleaser
 
+[0.3.0]: https://github.com/bpauli/gccli/releases/tag/v0.3.0
 [0.2.0]: https://github.com/bpauli/gccli/releases/tag/v0.2.0
 [0.1.0]: https://github.com/bpauli/gccli/releases/tag/v0.1.0
