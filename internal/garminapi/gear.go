@@ -8,9 +8,14 @@ import (
 )
 
 // GetSocialProfile returns the authenticated user's social profile.
-// The response includes userProfileNumber and profileId needed by other API calls.
+// It first resolves the display name via profile settings, then fetches the
+// social profile. The response includes profileId needed by other API calls.
 func (c *Client) GetSocialProfile(ctx context.Context) (json.RawMessage, error) {
-	return c.ConnectAPI(ctx, http.MethodGet, "/userprofile-service/usersocialprofile", nil)
+	displayName, err := c.GetDisplayName(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("resolve display name: %w", err)
+	}
+	return c.ConnectAPI(ctx, http.MethodGet, "/userprofile-service/socialProfile/"+displayName, nil)
 }
 
 // GetGear returns all gear for a user profile.

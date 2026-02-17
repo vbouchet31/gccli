@@ -32,11 +32,13 @@ func (c *Client) CountActivities(ctx context.Context) (int, error) {
 		return 0, err
 	}
 
-	var count int
-	if err := json.Unmarshal(data, &count); err != nil {
+	var result struct {
+		TotalCount int `json:"totalCount"`
+	}
+	if err := json.Unmarshal(data, &result); err != nil {
 		return 0, fmt.Errorf("parse activity count: %w", err)
 	}
-	return count, nil
+	return result.TotalCount, nil
 }
 
 // GetActivities returns a page of activities.
@@ -234,10 +236,11 @@ func (c *Client) doUploadBytes(ctx context.Context, path, contentType string, bo
 }
 
 // CreateManualActivity creates a manual activity entry.
-func (c *Client) CreateManualActivity(ctx context.Context, name, activityType string, distanceMeters float64, durationSeconds float64, startTime string) (json.RawMessage, error) {
+func (c *Client) CreateManualActivity(ctx context.Context, name, activityType, timezone string, distanceMeters float64, durationSeconds float64, startTime string) (json.RawMessage, error) {
 	payload := map[string]any{
 		"activityTypeDTO":      map[string]any{"typeKey": activityType},
 		"accessControlRuleDTO": map[string]any{"typeId": 2, "typeKey": "private"},
+		"timeZoneUnitDTO":      map[string]any{"unitKey": timezone},
 		"activityName":         name,
 		"metadataDTO":          map[string]any{"autoCalcCalories": true},
 		"summaryDTO": map[string]any{

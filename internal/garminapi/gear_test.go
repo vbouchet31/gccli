@@ -5,20 +5,24 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
 // --- GetSocialProfile tests ---
 
 func TestGetSocialProfile_Success(t *testing.T) {
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/userprofile-service/usersocialprofile" {
-			t.Errorf("path = %s, want /userprofile-service/usersocialprofile", r.URL.Path)
-		}
-		_, _ = w.Write([]byte(`{"userProfileNumber":12345678,"displayName":"Test User","profileId":87654321}`))
+	mux := http.NewServeMux()
+	mux.HandleFunc("/userprofile-service/userprofile/settings", func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{"displayName":"testuser"}`))
 	})
+	mux.HandleFunc("/userprofile-service/socialProfile/testuser", func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{"displayName":"testuser","profileId":12345678}`))
+	})
+	srv := httptest.NewServer(mux)
+	t.Cleanup(srv.Close)
 
-	_, client := testServer(t, handler)
+	client := NewClient(testTokens(), WithHTTPClient(srv.Client()), WithBaseURL(srv.URL))
 	data, err := client.GetSocialProfile(context.Background())
 	if err != nil {
 		t.Fatalf("GetSocialProfile: %v", err)
@@ -28,11 +32,11 @@ func TestGetSocialProfile_Success(t *testing.T) {
 	if err := json.Unmarshal(data, &result); err != nil {
 		t.Fatalf("unmarshal: %v", err)
 	}
-	if result["displayName"] != "Test User" {
-		t.Errorf("displayName = %v, want Test User", result["displayName"])
+	if result["displayName"] != "testuser" {
+		t.Errorf("displayName = %v, want testuser", result["displayName"])
 	}
-	if result["userProfileNumber"] != float64(12345678) {
-		t.Errorf("userProfileNumber = %v, want 12345678", result["userProfileNumber"])
+	if result["profileId"] != float64(12345678) {
+		t.Errorf("profileId = %v, want 12345678", result["profileId"])
 	}
 }
 

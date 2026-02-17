@@ -23,12 +23,15 @@ func (c *ActivityCreateCmd) Run(g *Globals) error {
 		return err
 	}
 
-	startTime := time.Now().UTC().Format("2006-01-02T15:04:05.000")
+	now := time.Now()
+	startTime := now.Format("2006-01-02T15:04:05.000")
+	timezone := now.Location().String()
 
 	data, err := client.CreateManualActivity(
 		g.Context,
 		c.Name,
 		c.Type,
+		timezone,
 		c.Distance,
 		c.Duration.Seconds(),
 		startTime,
