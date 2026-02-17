@@ -14,9 +14,14 @@ func gearTestServer(t *testing.T) *httptest.Server {
 	t.Helper()
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/userprofile-service/usersocialprofile", func(w http.ResponseWriter, _ *http.Request) {
+	mux.HandleFunc("/userprofile-service/userprofile/settings", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"userProfileNumber":12345678,"displayName":"Test User","profileId":87654321}`))
+		_, _ = w.Write([]byte(`{"displayName":"testuser"}`))
+	})
+
+	mux.HandleFunc("/userprofile-service/socialProfile/testuser", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"profileId":12345678,"displayName":"testuser"}`))
 	})
 
 	mux.HandleFunc("/gear-service/gear/filterGear", func(w http.ResponseWriter, _ *http.Request) {
@@ -136,9 +141,13 @@ func TestGearList_Success(t *testing.T) {
 
 func TestGearList_ServerError(t *testing.T) {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/userprofile-service/usersocialprofile", func(w http.ResponseWriter, _ *http.Request) {
+	mux.HandleFunc("/userprofile-service/userprofile/settings", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"userProfileNumber":12345678}`))
+		_, _ = w.Write([]byte(`{"displayName":"testuser"}`))
+	})
+	mux.HandleFunc("/userprofile-service/socialProfile/testuser", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"profileId":12345678}`))
 	})
 	mux.HandleFunc("/gear-service/gear/filterGear", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -163,7 +172,7 @@ func TestGearList_ServerError(t *testing.T) {
 
 func TestGearList_ProfileError(t *testing.T) {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/userprofile-service/usersocialprofile", func(w http.ResponseWriter, _ *http.Request) {
+	mux.HandleFunc("/userprofile-service/userprofile/settings", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write([]byte("error"))
 	})
@@ -473,9 +482,13 @@ func TestGearUnlink_ServerError(t *testing.T) {
 
 func TestGetUserProfilePK_Success(t *testing.T) {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/userprofile-service/usersocialprofile", func(w http.ResponseWriter, _ *http.Request) {
+	mux.HandleFunc("/userprofile-service/userprofile/settings", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"userProfileNumber":12345678,"displayName":"Test User"}`))
+		_, _ = w.Write([]byte(`{"displayName":"testuser"}`))
+	})
+	mux.HandleFunc("/userprofile-service/socialProfile/testuser", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"profileId":12345678,"displayName":"testuser"}`))
 	})
 	server := httptest.NewServer(mux)
 	defer server.Close()
@@ -503,9 +516,13 @@ func TestGetUserProfilePK_Success(t *testing.T) {
 
 func TestGetUserProfilePK_MissingField(t *testing.T) {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/userprofile-service/usersocialprofile", func(w http.ResponseWriter, _ *http.Request) {
+	mux.HandleFunc("/userprofile-service/userprofile/settings", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"displayName":"Test User"}`))
+		_, _ = w.Write([]byte(`{"displayName":"testuser"}`))
+	})
+	mux.HandleFunc("/userprofile-service/socialProfile/testuser", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"displayName":"testuser"}`))
 	})
 	server := httptest.NewServer(mux)
 	defer server.Close()
@@ -526,7 +543,7 @@ func TestGetUserProfilePK_MissingField(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
-	if !strings.Contains(err.Error(), "userProfileNumber") {
+	if !strings.Contains(err.Error(), "profileId") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }

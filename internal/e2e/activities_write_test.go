@@ -26,9 +26,11 @@ func TestCreateManualActivity(t *testing.T) {
 
 	// Create a manual activity with E2E_TEST_ prefix.
 	activityName := fmt.Sprintf("%s%d", e2eActivityPrefix, time.Now().UnixNano())
-	startTime := time.Now().UTC().Format("2006-01-02T15:04:05.000")
+	now := time.Now()
+	startTime := now.Format("2006-01-02T15:04:05.000")
+	timezone := now.Location().String()
 
-	data, err := client.CreateManualActivity(ctx, activityName, "running", 1000, 600, startTime)
+	data, err := client.CreateManualActivity(ctx, activityName, "running", timezone, 1000, 600, startTime)
 	if err != nil {
 		t.Fatalf("CreateManualActivity failed: %v", err)
 	}

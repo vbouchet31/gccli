@@ -14,9 +14,9 @@ func profileTestServer(t *testing.T) *httptest.Server {
 	t.Helper()
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/userprofile-service/usersocialprofile", func(w http.ResponseWriter, _ *http.Request) {
+	mux.HandleFunc("/userprofile-service/userprofile/settings", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"displayName":"Test User","userName":"testuser","profileImageUrlLarge":"https://example.com/img.jpg"}`))
+		_, _ = w.Write([]byte(`{"displayName":"Test User","timeZone":"Europe/Paris"}`))
 	})
 
 	mux.HandleFunc("/userprofile-service/userprofile/user-settings", func(w http.ResponseWriter, _ *http.Request) {
@@ -78,7 +78,7 @@ func TestProfileView_Success(t *testing.T) {
 
 func TestProfileView_ServerError(t *testing.T) {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/userprofile-service/usersocialprofile", func(w http.ResponseWriter, _ *http.Request) {
+	mux.HandleFunc("/userprofile-service/userprofile/settings", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write([]byte("error"))
 	})

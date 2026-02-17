@@ -86,8 +86,8 @@ func TestAuthStatus(t *testing.T) {
 	client := AuthenticatedClient(t)
 
 	// Make a lightweight API call to verify tokens work.
-	// GetProfile is a simple GET that requires authentication.
-	data, err := client.ConnectAPI(context.Background(), "GET", "/userprofile-service/usersocialprofile", nil)
+	// Profile settings is a simple GET that requires authentication.
+	data, err := client.ConnectAPI(context.Background(), "GET", "/userprofile-service/userprofile/settings", nil)
 	if err != nil {
 		t.Fatalf("API call with authenticated client failed: %v", err)
 	}

@@ -160,9 +160,9 @@ func getUserProfilePK(g *Globals, client *garminapi.Client) (string, error) {
 		return "", fmt.Errorf("parse user profile: %w", err)
 	}
 
-	pk, ok := profile["userProfileNumber"]
+	pk, ok := profile["profileId"]
 	if !ok {
-		return "", fmt.Errorf("user profile missing userProfileNumber field")
+		return "", fmt.Errorf("user profile missing profileId field")
 	}
 
 	return fmt.Sprintf("%v", pk), nil

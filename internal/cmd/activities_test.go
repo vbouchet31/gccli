@@ -48,7 +48,7 @@ func activitiesTestServer(t *testing.T) *httptest.Server {
 
 	mux.HandleFunc("/activitylist-service/activities/count", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte("42"))
+		_, _ = w.Write([]byte(`{"totalCount":42}`))
 	})
 
 	return httptest.NewServer(mux)

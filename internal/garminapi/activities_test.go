@@ -25,7 +25,7 @@ func TestCountActivities_Success(t *testing.T) {
 		if r.Method != http.MethodGet {
 			t.Errorf("method = %s, want GET", r.Method)
 		}
-		_, _ = w.Write([]byte(`42`))
+		_, _ = w.Write([]byte(`{"totalCount":42}`))
 	})
 
 	_, client := testServer(t, handler)
@@ -710,7 +710,7 @@ func TestCreateManualActivity_Success(t *testing.T) {
 
 	_, client := testServer(t, handler)
 	data, err := client.CreateManualActivity(context.Background(),
-		"Morning Run", "running", 5000, 1800, "2024-01-15T08:00:00")
+		"Morning Run", "running", "America/New_York", 5000, 1800, "2024-01-15T08:00:00")
 	if err != nil {
 		t.Fatalf("CreateManualActivity: %v", err)
 	}
