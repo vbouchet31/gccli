@@ -23,6 +23,7 @@ Fast, script-friendly CLI for Garmin Connect. Access activities, health data, bo
 - **Secure credential storage** using OS keyring (macOS Keychain, Linux Secret Service, encrypted file fallback)
 - **Auto-refreshing tokens** — authenticate once, tokens refresh automatically on 401
 - **Resilient networking** — automatic retry on 429/5xx with exponential backoff, circuit breaker for fault tolerance
+- **Shell completion** — generated scripts for bash, zsh, fish, and PowerShell
 - **Parseable output** — JSON and plain/TSV modes for scripting and automation
 
 ## Installation
@@ -518,6 +519,41 @@ gccli wellness pregnancy-summary
 gccli reload                           # Reload today's data
 gccli reload 2024-06-15                # Reload specific date
 ```
+
+### Shell Completion
+
+Generate completion scripts for your shell:
+
+```bash
+gccli completion bash
+gccli completion zsh
+gccli completion fish
+gccli completion powershell
+```
+
+To enable completions, add the appropriate line to your shell profile:
+
+**Bash** (`~/.bashrc`):
+```bash
+source <(gccli completion bash)
+```
+
+**Zsh** (`~/.zshrc`):
+```bash
+source <(gccli completion zsh)
+```
+
+**Fish** (`~/.config/fish/config.fish`):
+```fish
+gccli completion fish | source
+```
+
+**PowerShell** (`$PROFILE`):
+```powershell
+gccli completion powershell | Invoke-Expression
+```
+
+Completions cover all commands, subcommands, flags, and enum flag values (e.g. `--color auto|always|never`).
 
 ## Output Formats
 

@@ -452,6 +452,11 @@ gccli activities list --limit 5</pre>
             <h3>Resilient Networking</h3>
             <p>Auto-retry on 429/5xx with exponential backoff, circuit breaker, and automatic OAuth2 token refresh on 401.</p>
           </div>
+          <div class="feature-card fade-in">
+            <div class="feature-icon yellow">&#x2328;</div>
+            <h3>Shell Completion</h3>
+            <p>Generated completion scripts for bash, zsh, fish, and PowerShell. Commands, subcommands, flags, and enum values.</p>
+          </div>
         </div>
       </div>
     </section>
@@ -600,7 +605,7 @@ gccli activities list --limit 5</pre>
 
           <!-- Hydration, Profile, Training, Wellness -->
           <div class="cmd-group fade-in">
-            <div class="cmd-header"><h3>Hydration, Profile, Training &amp; Wellness</h3><span class="cmd-arrow">&#x25B6;</span></div>
+            <div class="cmd-header"><h3>Hydration, Profile, Training, Wellness &amp; Utilities</h3><span class="cmd-arrow">&#x25B6;</span></div>
             <div class="cmd-body">
               <div class="cmd-row"><div class="cmd">gccli hydration [date]</div><div class="desc">View hydration data</div></div>
               <div class="cmd-row"><div class="cmd">gccli hydration add 500</div><div class="desc">Log 500ml of water</div></div>
@@ -611,6 +616,10 @@ gccli activities list --limit 5</pre>
               <div class="cmd-row"><div class="cmd">gccli wellness menstrual-cycle --start-date ... --end-date ...</div><div class="desc">Menstrual cycle data</div></div>
               <div class="cmd-row"><div class="cmd">gccli wellness pregnancy-summary</div><div class="desc">Pregnancy summary</div></div>
               <div class="cmd-row"><div class="cmd">gccli reload [date]</div><div class="desc">Reload data for a date</div></div>
+              <div class="cmd-row"><div class="cmd">gccli completion bash</div><div class="desc">Generate bash completion script</div></div>
+              <div class="cmd-row"><div class="cmd">gccli completion zsh</div><div class="desc">Generate zsh completion script</div></div>
+              <div class="cmd-row"><div class="cmd">gccli completion fish</div><div class="desc">Generate fish completion script</div></div>
+              <div class="cmd-row"><div class="cmd">gccli completion powershell</div><div class="desc">Generate PowerShell completion script</div></div>
             </div>
           </div>
 
