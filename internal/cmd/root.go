@@ -37,6 +37,7 @@ type CLI struct {
 	Gear       GearCmd       `cmd:"" help:"Manage gear."`
 	Goals      GoalsCmd      `cmd:"" help:"View goals."`
 	Badges     BadgesCmd     `cmd:"" help:"View badges."`
+	Courses    CoursesCmd    `cmd:"" help:"Manage courses."`
 	Challenges ChallengesCmd `cmd:"" help:"View challenges."`
 	Records    RecordsCmd    `cmd:"" help:"View personal records."`
 	Profile    ProfileCmd    `cmd:"" help:"View user profile."`
