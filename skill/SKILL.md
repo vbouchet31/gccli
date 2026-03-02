@@ -122,6 +122,10 @@ Common commands
 - Create running workout with pace: `gccli workouts create "Easy Run" --type run --step "warmup:5m" --step "run:20m@pace:5:00-5:30" --step "cooldown:5m"`
 - Create workout with HR targets: `gccli workouts create "HR Run" --type run --step "warmup:10m" --step "run:20m@hr:140-160" --step "cooldown:10m"`
 - Create cycling workout with power: `gccli workouts create "FTP Intervals" --type bike --step "warmup:10m" --step "run:5m@power:250-280" --step "recovery:3m" --step "run:5m@power:250-280" --step "cooldown:10m"`
+- List courses: `gccli courses list`
+- Favorite courses: `gccli courses favorites`
+- Course detail: `gccli courses detail <id>`
+- Send course to device: `gccli courses send <course-id> <device-id>`
 - List devices: `gccli devices list`
 - Device settings: `gccli devices settings <device-id>`
 - Primary device: `gccli devices primary`
