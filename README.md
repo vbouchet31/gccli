@@ -4,7 +4,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/bpauli/gccli)](https://goreportcard.com/report/github.com/bpauli/gccli)
 [![Docs](https://img.shields.io/badge/docs-gccli.sh-blue)](https://gccli.sh)
 
-Fast, script-friendly CLI for Garmin Connect. Access activities, health data, body composition, workouts, devices, gear, goals, badges, and more. JSON-first output, multiple accounts, and secure credential storage built in.
+Fast, script-friendly CLI for Garmin Connect. Access activities, health data, body composition, workouts, courses, devices, gear, goals, badges, and more. JSON-first output, multiple accounts, and secure credential storage built in.
 
 ## Features
 
@@ -12,6 +12,7 @@ Fast, script-friendly CLI for Garmin Connect. Access activities, health data, bo
 - **Health Data** — daily summaries, steps, heart rate, resting HR, sleep, stress, HRV, SpO2, respiration, body battery, floors, training readiness/status, VO2max, fitness age, race predictions, endurance/hill scores, intensity minutes, lactate threshold, cycling FTP
 - **Body Composition** — weight tracking, body fat, muscle mass, blood pressure, FIT file encoding for composition uploads
 - **Workouts** — list, view, download as FIT, upload from JSON, create with sport types and targets (pace/HR/power/cadence), schedule (add/list/remove), delete
+- **Courses** — list courses, view favorites, get full course detail, send courses directly to a device
 - **Devices** — list registered devices, view settings, solar data, alarms, primary/last-used device
 - **Gear** — list gear, usage stats, linked activities, defaults per activity type, link/unlink to activities
 - **Goals & Badges** — active goals, earned/available/in-progress badges, challenges, personal records
@@ -447,6 +448,15 @@ Key reference values:
 - **Target types**: no.target (1), power.zone (2), cadence (3), heart.rate.zone (4), pace.zone (6)
 - **End condition**: time (2) — value in seconds
 - **Pace values**: in m/s (e.g., 5:00/km = 1000/300 = 3.333 m/s)
+
+### Courses
+
+```bash
+gccli courses list                             # List all courses
+gccli courses favorites                        # List favorite courses
+gccli courses detail <id>                      # View full course detail
+gccli courses send <course-id> <device-id>     # Send course to a device
+```
 
 ### Devices
 
