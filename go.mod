@@ -1,13 +1,13 @@
 module github.com/bpauli/gccli
 
-go 1.24.0
+go 1.25.0
 
 require (
 	github.com/99designs/keyring v1.2.2
 	github.com/alecthomas/kong v1.14.0
 	github.com/joho/godotenv v1.5.1
 	github.com/muesli/termenv v0.16.0
-	golang.org/x/net v0.50.0
+	golang.org/x/net v0.51.0
 	golang.org/x/term v0.40.0
 )
 
