@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2026-03-02
+
+### Added
+
+- **`courses` command group** — New commands for managing Garmin Connect courses:
+  - `courses list` — List all user courses with table/JSON/plain output
+  - `courses favorites` — List favorite courses
+  - `courses detail <id>` — View full course detail (JSON)
+  - `courses send <course-id> <device-id>` — Send a course to a device via the device message API
+- **Courses API methods** — `GetCourses`, `GetCourse`, `GetCourseFavorites`, `SendCourseToDevice` in the API client
+- **E2E tests for courses** — End-to-end tests against the real Garmin Connect API
+
+### Changed
+
+- Updated Go module dependencies (`golang.org/x/net`)
+- Updated CI dependencies (`actions/checkout` 4→6, `actions/setup-go` 5→6, `goreleaser/goreleaser-action` 6→7)
+
+### Docs
+
+- Added Courses section to website (hero badge, feature card, command reference)
+- Added courses commands to skill reference (`skill/SKILL.md`)
+- Added shell completions card to install section on website
+
 ## [0.3.0] - 2026-02-17
 
 ### Added
@@ -67,6 +90,7 @@ Initial release of gccli — a fast, script-friendly CLI for Garmin Connect.
 - **CI pipeline** — GitHub Actions for fmt-check, lint, and test
 - **Cross-platform builds** — macOS (amd64/arm64) and Linux (amd64/arm64) via goreleaser
 
+[1.0.0]: https://github.com/bpauli/gccli/releases/tag/v1.0.0
 [0.3.0]: https://github.com/bpauli/gccli/releases/tag/v0.3.0
 [0.2.0]: https://github.com/bpauli/gccli/releases/tag/v0.2.0
 [0.1.0]: https://github.com/bpauli/gccli/releases/tag/v0.1.0
