@@ -266,6 +266,7 @@
               <span class="badge">Gear</span>
               <span class="badge">Goals</span>
               <span class="badge">Badges</span>
+              <span class="badge">Courses</span>
               <span class="badge">Training</span>
               <span class="badge">Hydration</span>
               <span class="badge">Wellness</span>
@@ -427,6 +428,11 @@ gccli activities list --limit 5</pre>
             <p>Weight tracking, body fat, muscle mass, weigh-in history, blood pressure. Add entries and upload via FIT encoding.</p>
           </div>
           <div class="feature-card fade-in">
+            <div class="feature-icon violet">&#x1f5fa;</div>
+            <h3>Courses</h3>
+            <p>List courses, view favorites, get full course detail. Send courses directly to your device.</p>
+          </div>
+          <div class="feature-card fade-in">
             <div class="feature-icon violet">&#x231a;</div>
             <h3>Devices</h3>
             <p>List registered devices, view settings, solar data, alarms. Query primary and last-used device.</p>
@@ -574,6 +580,17 @@ gccli activities list --limit 5</pre>
               <div class="cmd-row"><div class="cmd">gccli workouts schedule list &lt;YYYY-MM-DD&gt;</div><div class="desc">List scheduled workouts for a date</div></div>
               <div class="cmd-row"><div class="cmd">gccli workouts schedule remove &lt;schedule-id&gt; [-f]</div><div class="desc">Remove a scheduled workout</div></div>
               <div class="cmd-row"><div class="cmd">gccli workouts delete &lt;id&gt;</div><div class="desc">Delete a workout</div></div>
+            </div>
+          </div>
+
+          <!-- Courses -->
+          <div class="cmd-group fade-in">
+            <div class="cmd-header"><h3>Courses</h3><span class="cmd-arrow">&#x25B6;</span></div>
+            <div class="cmd-body">
+              <div class="cmd-row"><div class="cmd">gccli courses list</div><div class="desc">List your courses</div></div>
+              <div class="cmd-row"><div class="cmd">gccli courses favorites</div><div class="desc">List favorite courses</div></div>
+              <div class="cmd-row"><div class="cmd">gccli courses detail &lt;id&gt;</div><div class="desc">View course details</div></div>
+              <div class="cmd-row"><div class="cmd">gccli courses send &lt;course-id&gt; &lt;device-id&gt;</div><div class="desc">Send course to a device</div></div>
             </div>
           </div>
 
