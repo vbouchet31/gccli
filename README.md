@@ -12,7 +12,7 @@ Fast, script-friendly CLI for Garmin Connect. Access activities, health data, bo
 - **Health Data** — daily summaries, steps, heart rate, resting HR, sleep, stress, HRV, SpO2, respiration, body battery, floors, training readiness/status, VO2max, fitness age, race predictions, endurance/hill scores, intensity minutes, lactate threshold, cycling FTP
 - **Body Composition** — weight tracking, body fat, muscle mass, blood pressure, FIT file encoding for composition uploads
 - **Workouts** — list, view, download as FIT, upload from JSON, create with sport types and targets (pace/HR/power/cadence), schedule (add/list/remove), delete
-- **Courses** — list courses, view favorites, get full course detail, import GPX files as new courses, send courses directly to a device
+- **Courses** — list courses, view favorites, get full course detail, import GPX files as new courses, send courses directly to a device, delete courses
 - **Devices** — list registered devices, view settings, solar data, alarms, primary/last-used device
 - **Gear** — list gear, usage stats, linked activities, defaults per activity type, link/unlink to activities
 - **Goals & Badges** — active goals, earned/available/in-progress badges, challenges, personal records
@@ -459,6 +459,8 @@ gccli courses import route.gpx                 # Import GPX as new course (defau
 gccli courses import route.gpx --name "Ride"   # Import with custom name
 gccli courses import route.gpx --type hiking   # Override activity type
 gccli courses send <course-id> <device-id>     # Send course to a device
+gccli courses delete <id>                      # Delete a course
+gccli courses delete <id> -f                   # Delete without confirmation
 ```
 
 ### Devices

@@ -362,6 +362,65 @@ func TestSaveCourse_ServerError(t *testing.T) {
 	}
 }
 
+// --- DeleteCourse tests ---
+
+func TestDeleteCourse_Success(t *testing.T) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/course-service/course/12345" {
+			t.Errorf("path = %s, want /course-service/course/12345", r.URL.Path)
+		}
+		if r.Method != http.MethodDelete {
+			t.Errorf("method = %s, want DELETE", r.Method)
+		}
+		w.WriteHeader(http.StatusNoContent)
+	})
+
+	_, client := testServer(t, handler)
+	err := client.DeleteCourse(context.Background(), "12345")
+	if err != nil {
+		t.Fatalf("DeleteCourse: %v", err)
+	}
+}
+
+func TestDeleteCourse_NotFound(t *testing.T) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte("not found"))
+	})
+
+	_, client := testServer(t, handler)
+	err := client.DeleteCourse(context.Background(), "99999")
+	if err == nil {
+		t.Fatal("expected error")
+	}
+
+	var apiErr *GarminAPIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected GarminAPIError, got %T: %v", err, err)
+	}
+	if apiErr.StatusCode != http.StatusNotFound {
+		t.Errorf("status = %d, want %d", apiErr.StatusCode, http.StatusNotFound)
+	}
+}
+
+func TestDeleteCourse_ServerError(t *testing.T) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte("error"))
+	})
+
+	_, client := testServer(t, handler)
+	err := client.DeleteCourse(context.Background(), "12345")
+	if err == nil {
+		t.Fatal("expected error")
+	}
+
+	var apiErr *GarminAPIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected GarminAPIError, got %T: %v", err, err)
+	}
+}
+
 // --- SendCourseToDevice tests ---
 
 func TestSendCourseToDevice_Success(t *testing.T) {

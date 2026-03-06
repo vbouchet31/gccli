@@ -104,6 +104,7 @@ Common commands
 - Import course with name: `gccli courses import route.gpx --name "Sunday Ride"`
 - Import course with type: `gccli courses import route.gpx --type gravel_cycling`
 - Send course to device: `gccli courses send <course-id> <device-id>`
+- Delete course: `gccli courses delete <id>` (use `-f` to skip confirmation)
 - List devices: `gccli devices list`
 - Device settings: `gccli devices settings <device-id>`
 - Primary device: `gccli devices primary`

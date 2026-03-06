@@ -68,6 +68,12 @@ func (c *Client) SaveCourse(ctx context.Context, course json.RawMessage) (json.R
 	return c.ConnectAPI(ctx, http.MethodPost, "/course-service/course", bytes.NewReader(course))
 }
 
+// DeleteCourse deletes a course by ID.
+func (c *Client) DeleteCourse(ctx context.Context, courseID string) error {
+	_, err := c.ConnectAPI(ctx, http.MethodDelete, "/course-service/course/"+courseID, nil)
+	return err
+}
+
 // SendCourseToDevice sends a course to a device via the device message API.
 func (c *Client) SendCourseToDevice(ctx context.Context, courseID, deviceID, courseName string) (json.RawMessage, error) {
 	deviceIDInt, err := strconv.ParseInt(deviceID, 10, 64)

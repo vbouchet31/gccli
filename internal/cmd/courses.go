@@ -17,6 +17,7 @@ type CoursesCmd struct {
 	Detail    CourseDetailCmd     `cmd:"" help:"View course details."`
 	Import    CourseImportCmd     `cmd:"" help:"Import a GPX file as a new course."`
 	Send      CourseSendCmd       `cmd:"" help:"Send a course to a device."`
+	Delete    CourseDeleteCmd     `cmd:"" help:"Delete a course."`
 }
 
 // CoursesListCmd lists the user's courses.
@@ -262,6 +263,35 @@ func (c *CourseSendCmd) Run(g *Globals) error {
 		g.UI.Successf("Sent course %q to device %s", courseName, c.DeviceID)
 	}
 
+	return nil
+}
+
+// CourseDeleteCmd deletes a course.
+type CourseDeleteCmd struct {
+	ID    string `arg:"" help:"Course ID."`
+	Force bool   `help:"Skip confirmation prompt." short:"f"`
+}
+
+func (c *CourseDeleteCmd) Run(g *Globals) error {
+	client, err := resolveClient(g)
+	if err != nil {
+		return err
+	}
+
+	ok, err := confirm(os.Stderr, fmt.Sprintf("Delete course %s?", c.ID), c.Force)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		g.UI.Infof("Cancelled")
+		return nil
+	}
+
+	if err := client.DeleteCourse(g.Context, c.ID); err != nil {
+		return fmt.Errorf("delete course: %w", err)
+	}
+
+	g.UI.Successf("Deleted course %s", c.ID)
 	return nil
 }
 
