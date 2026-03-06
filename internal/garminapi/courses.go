@@ -5,8 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 // GetCourses returns all courses owned by the current user.
@@ -22,6 +27,45 @@ func (c *Client) GetCourse(ctx context.Context, courseID string) (json.RawMessag
 // GetCourseFavorites returns the user's favorite courses.
 func (c *Client) GetCourseFavorites(ctx context.Context) (json.RawMessage, error) {
 	return c.ConnectAPI(ctx, http.MethodGet, "/course-service/course/favorites", nil)
+}
+
+// ImportCourseGPX uploads a GPX file and returns parsed course data.
+func (c *Client) ImportCourseGPX(ctx context.Context, filePath string) (json.RawMessage, error) {
+	ext := strings.ToLower(strings.TrimPrefix(filepath.Ext(filePath), "."))
+	if ext != "gpx" {
+		return nil, &InvalidFileFormatError{Format: ext}
+	}
+
+	f, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("open file: %w", err)
+	}
+	defer func() { _ = f.Close() }()
+
+	var buf bytes.Buffer
+	writer := multipart.NewWriter(&buf)
+	part, err := writer.CreateFormFile("file", filepath.Base(filePath))
+	if err != nil {
+		return nil, fmt.Errorf("create form file: %w", err)
+	}
+	if _, err := io.Copy(part, f); err != nil {
+		return nil, fmt.Errorf("copy file data: %w", err)
+	}
+	if err := writer.Close(); err != nil {
+		return nil, fmt.Errorf("close multipart writer: %w", err)
+	}
+
+	return c.doUpload(ctx, "/course-service/course/import", writer.FormDataContentType(), &buf, true)
+}
+
+// GetCourseElevation enriches geo points with elevation data.
+func (c *Client) GetCourseElevation(ctx context.Context, points json.RawMessage) (json.RawMessage, error) {
+	return c.ConnectAPI(ctx, http.MethodPost, "/course-service/course/elevation?smoothingEnabled=true", bytes.NewReader(points))
+}
+
+// SaveCourse creates a new course from enriched course data.
+func (c *Client) SaveCourse(ctx context.Context, course json.RawMessage) (json.RawMessage, error) {
+	return c.ConnectAPI(ctx, http.MethodPost, "/course-service/course", bytes.NewReader(course))
 }
 
 // SendCourseToDevice sends a course to a device via the device message API.
