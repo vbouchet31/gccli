@@ -64,6 +64,8 @@ func (c *Client) GetCourseElevation(ctx context.Context, points json.RawMessage)
 }
 
 // SaveCourse creates a new course from enriched course data.
+// The course payload must include coursePrivacy (1=public, 2=private, 4=group)
+// and rulePK (must not be null, typically 2).
 func (c *Client) SaveCourse(ctx context.Context, course json.RawMessage) (json.RawMessage, error) {
 	return c.ConnectAPI(ctx, http.MethodPost, "/course-service/course", bytes.NewReader(course))
 }

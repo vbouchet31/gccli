@@ -100,9 +100,10 @@ Common commands
 - List courses: `gccli courses list`
 - Favorite courses: `gccli courses favorites`
 - Course detail: `gccli courses detail <id>`
-- Import course from GPX (default: cycling): `gccli courses import route.gpx`
+- Import course from GPX (default: cycling, private): `gccli courses import route.gpx`
 - Import course with name: `gccli courses import route.gpx --name "Sunday Ride"`
 - Import course with type: `gccli courses import route.gpx --type gravel_cycling`
+- Import public course: `gccli courses import route.gpx --privacy 1`
 - Send course to device: `gccli courses send <course-id> <device-id>`
 - Delete course: `gccli courses delete <id>` (use `-f` to skip confirmation)
 - List devices: `gccli devices list`

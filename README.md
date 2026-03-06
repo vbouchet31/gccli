@@ -455,9 +455,10 @@ Key reference values:
 gccli courses list                             # List all courses
 gccli courses favorites                        # List favorite courses
 gccli courses detail <id>                      # View full course detail
-gccli courses import route.gpx                 # Import GPX as new course (default: cycling)
+gccli courses import route.gpx                 # Import GPX as new course (default: cycling, private)
 gccli courses import route.gpx --name "Ride"   # Import with custom name
 gccli courses import route.gpx --type hiking   # Override activity type
+gccli courses import route.gpx --privacy 1     # Import as public course
 gccli courses send <course-id> <device-id>     # Send course to a device
 gccli courses delete <id>                      # Delete a course
 gccli courses delete <id> -f                   # Delete without confirmation
