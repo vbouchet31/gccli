@@ -100,7 +100,7 @@ Common commands
 - List courses: `gccli courses list`
 - Favorite courses: `gccli courses favorites`
 - Course detail: `gccli courses detail <id>`
-- Import course from GPX: `gccli courses import route.gpx`
+- Import course from GPX (default: cycling): `gccli courses import route.gpx`
 - Import course with name: `gccli courses import route.gpx --name "Sunday Ride"`
 - Import course with type: `gccli courses import route.gpx --type gravel_cycling`
 - Send course to device: `gccli courses send <course-id> <device-id>`
