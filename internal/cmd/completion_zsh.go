@@ -42,7 +42,7 @@ _gccli() {
 		}
 	}
 
-	b.WriteString("_gccli \"$@\"\n")
+	b.WriteString("compdef _gccli gccli\n")
 
 	return b.String()
 }

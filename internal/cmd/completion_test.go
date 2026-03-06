@@ -150,6 +150,7 @@ func TestGenerateZsh(t *testing.T) {
 	checks := []string{
 		"#compdef gccli",
 		"_gccli",
+		"compdef _gccli gccli",
 		"auth",
 		"activities",
 		"--json",
