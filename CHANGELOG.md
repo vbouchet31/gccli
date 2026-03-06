@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-03-06
+
+### Added
+
+- **`courses import` command** — Import GPX files as new courses on Garmin Connect:
+  - `courses import route.gpx` — Import with default settings (cycling, private)
+  - `--name "My Route"` — Override the course name
+  - `--type hiking` — Set activity type (running, cycling, hiking, etc.)
+  - `--privacy 1` — Set course privacy (1=public, 2=private, 4=group)
+- **`courses delete` command** — Delete a course by ID with confirmation prompt (`-f` to skip)
+- **Courses API methods** — `ImportCourseGPX`, `GetCourseElevation`, `SaveCourse`, `DeleteCourse` in the API client
+- **E2E test for courses import+delete** — Full lifecycle test: import GPX → enrich elevation → save → verify → delete
+
+### Fixed
+
+- **Courses import save payload** — Filter import response to only API-accepted fields, set required defaults (`coursePrivacy`, `rulePK`, `coordinateSystem`, `sourceTypeId`, `startPoint`), and handle `latitude`/`longitude` field names correctly for elevation enrichment
+
 ## [1.0.0] - 2026-03-02
 
 ### Added
@@ -90,6 +107,7 @@ Initial release of gccli — a fast, script-friendly CLI for Garmin Connect.
 - **CI pipeline** — GitHub Actions for fmt-check, lint, and test
 - **Cross-platform builds** — macOS (amd64/arm64) and Linux (amd64/arm64) via goreleaser
 
+[1.1.0]: https://github.com/bpauli/gccli/releases/tag/v1.1.0
 [1.0.0]: https://github.com/bpauli/gccli/releases/tag/v1.0.0
 [0.3.0]: https://github.com/bpauli/gccli/releases/tag/v0.3.0
 [0.2.0]: https://github.com/bpauli/gccli/releases/tag/v0.2.0
