@@ -79,18 +79,8 @@ func zshWriteFunction(b *strings.Builder, funcName string, node *kong.Node, isRo
 		b.WriteString("        '1:command:->command' \\\n")
 		b.WriteString("        '*::arg:->args'\n\n")
 
-		b.WriteString("    case $state in\n")
-		b.WriteString("        command)\n")
-		b.WriteString("            commands=(\n")
-		for _, cmd := range subCmds {
-			help := escapeZshDescription(cmd.help)
-			fmt.Fprintf(b, "                '%s:%s'\n", cmd.name, help)
-		}
-		b.WriteString("            )\n")
-		b.WriteString("            _describe 'command' commands\n")
-		b.WriteString("            ;;\n")
-		b.WriteString("        args)\n")
-		b.WriteString("            case $line[1] in\n")
+		// Collect arg cases before writing, to avoid empty case blocks.
+		var argCases strings.Builder
 		for _, cmd := range subCmds {
 			childNode := findNode(node, []string{cmd.name})
 			if childNode == nil {
@@ -121,25 +111,41 @@ func zshWriteFunction(b *strings.Builder, funcName string, node *kong.Node, isRo
 				}
 				_ = n
 				childFunc := "_gccli_" + strings.Join(fullPath, "_")
-				fmt.Fprintf(b, "                %s)\n", cmd.name)
-				fmt.Fprintf(b, "                    %s\n", childFunc)
-				fmt.Fprintf(b, "                    ;;\n")
+				fmt.Fprintf(&argCases, "                %s)\n", cmd.name)
+				fmt.Fprintf(&argCases, "                    %s\n", childFunc)
+				fmt.Fprintf(&argCases, "                    ;;\n")
 			} else {
 				// Leaf command — complete its flags.
 				flags := collectFlags(childNode)
 				if len(flags) > 0 {
-					fmt.Fprintf(b, "                %s)\n", cmd.name)
-					b.WriteString("                    _arguments \\\n")
+					fmt.Fprintf(&argCases, "                %s)\n", cmd.name)
+					argCases.WriteString("                    _arguments \\\n")
 					for _, f := range flags {
-						zshWriteFlagArg(b, f)
+						zshWriteFlagArg(&argCases, f)
 					}
-					b.WriteString("                        '*:filename:_files'\n")
-					fmt.Fprintf(b, "                    ;;\n")
+					argCases.WriteString("                        '*:filename:_files'\n")
+					fmt.Fprintf(&argCases, "                    ;;\n")
 				}
 			}
 		}
-		b.WriteString("            esac\n")
+
+		b.WriteString("    case $state in\n")
+		b.WriteString("        command)\n")
+		b.WriteString("            commands=(\n")
+		for _, cmd := range subCmds {
+			help := escapeZshDescription(cmd.help)
+			fmt.Fprintf(b, "                '%s:%s'\n", cmd.name, help)
+		}
+		b.WriteString("            )\n")
+		b.WriteString("            _describe 'command' commands\n")
 		b.WriteString("            ;;\n")
+		if argCases.Len() > 0 {
+			b.WriteString("        args)\n")
+			b.WriteString("            case $line[1] in\n")
+			b.WriteString(argCases.String())
+			b.WriteString("            esac\n")
+			b.WriteString("            ;;\n")
+		}
 		b.WriteString("    esac\n")
 	} else {
 		// Leaf node — just flags.
@@ -153,11 +159,7 @@ func zshWriteFunction(b *strings.Builder, funcName string, node *kong.Node, isRo
 		}
 	}
 
-	if !isRoot {
-		b.WriteString("}\n\n")
-	} else {
-		b.WriteString("\n")
-	}
+	b.WriteString("}\n\n")
 }
 
 func zshWriteFlagArg(b *strings.Builder, f flagInfo) {
