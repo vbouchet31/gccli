@@ -6,6 +6,9 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -143,6 +146,212 @@ func TestGetCourseFavorites_ServerError(t *testing.T) {
 
 	_, client := testServer(t, handler)
 	_, err := client.GetCourseFavorites(context.Background())
+	if err == nil {
+		t.Fatal("expected error")
+	}
+
+	var apiErr *GarminAPIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected GarminAPIError, got %T: %v", err, err)
+	}
+}
+
+// --- ImportCourseGPX tests ---
+
+func TestImportCourseGPX_Success(t *testing.T) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/course-service/course/import" {
+			t.Errorf("path = %s, want /course-service/course/import", r.URL.Path)
+		}
+		if r.Method != http.MethodPost {
+			t.Errorf("method = %s, want POST", r.Method)
+		}
+		ct := r.Header.Get("Content-Type")
+		if !strings.HasPrefix(ct, "multipart/form-data") {
+			t.Errorf("Content-Type = %s, want multipart/form-data", ct)
+		}
+
+		if err := r.ParseMultipartForm(10 << 20); err != nil {
+			t.Fatalf("parse multipart: %v", err)
+		}
+		file, header, err := r.FormFile("file")
+		if err != nil {
+			t.Fatalf("FormFile: %v", err)
+		}
+		defer func() { _ = file.Close() }()
+
+		if header.Filename != "route.gpx" {
+			t.Errorf("filename = %s, want route.gpx", header.Filename)
+		}
+		content, _ := io.ReadAll(file)
+		if string(content) != "<gpx>test</gpx>" {
+			t.Errorf("content = %q, want <gpx>test</gpx>", content)
+		}
+
+		_, _ = w.Write([]byte(`{"courseName":"Test Route","geoPoints":[{"lat":47.0,"lon":8.0}]}`))
+	})
+
+	_, client := testServer(t, handler)
+
+	dir := t.TempDir()
+	path := filepath.Join(dir, "route.gpx")
+	if err := os.WriteFile(path, []byte("<gpx>test</gpx>"), 0o644); err != nil {
+		t.Fatalf("write temp file: %v", err)
+	}
+
+	data, err := client.ImportCourseGPX(context.Background(), path)
+	if err != nil {
+		t.Fatalf("ImportCourseGPX: %v", err)
+	}
+
+	var result map[string]any
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if result["courseName"] != "Test Route" {
+		t.Errorf("courseName = %v, want Test Route", result["courseName"])
+	}
+}
+
+func TestImportCourseGPX_InvalidFormat(t *testing.T) {
+	_, client := testServer(t, http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
+
+	dir := t.TempDir()
+	path := filepath.Join(dir, "route.tcx")
+	if err := os.WriteFile(path, []byte("<tcx/>"), 0o644); err != nil {
+		t.Fatalf("write temp file: %v", err)
+	}
+
+	_, err := client.ImportCourseGPX(context.Background(), path)
+	if err == nil {
+		t.Fatal("expected error for non-GPX file")
+	}
+
+	var fmtErr *InvalidFileFormatError
+	if !errors.As(err, &fmtErr) {
+		t.Fatalf("expected InvalidFileFormatError, got %T: %v", err, err)
+	}
+}
+
+func TestImportCourseGPX_FileNotFound(t *testing.T) {
+	_, client := testServer(t, http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
+
+	_, err := client.ImportCourseGPX(context.Background(), "/nonexistent/route.gpx")
+	if err == nil {
+		t.Fatal("expected error for missing file")
+	}
+}
+
+// --- GetCourseElevation tests ---
+
+func TestGetCourseElevation_Success(t *testing.T) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/course-service/course/elevation" {
+			t.Errorf("path = %s, want /course-service/course/elevation", r.URL.Path)
+		}
+		if r.URL.Query().Get("smoothingEnabled") != "true" {
+			t.Error("expected smoothingEnabled=true query param")
+		}
+		if r.Method != http.MethodPost {
+			t.Errorf("method = %s, want POST", r.Method)
+		}
+
+		body, _ := io.ReadAll(r.Body)
+		var points [][]any
+		if err := json.Unmarshal(body, &points); err != nil {
+			t.Fatalf("unmarshal request: %v", err)
+		}
+		if len(points) != 2 {
+			t.Fatalf("expected 2 points, got %d", len(points))
+		}
+
+		_, _ = w.Write([]byte(`[[47.0,8.0,500.0],[47.1,8.1,510.0]]`))
+	})
+
+	_, client := testServer(t, handler)
+	input := json.RawMessage(`[[47.0,8.0,null],[47.1,8.1,null]]`)
+	data, err := client.GetCourseElevation(context.Background(), input)
+	if err != nil {
+		t.Fatalf("GetCourseElevation: %v", err)
+	}
+
+	var result [][]any
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if len(result) != 2 {
+		t.Fatalf("expected 2 points, got %d", len(result))
+	}
+	if result[0][2] != 500.0 {
+		t.Errorf("elevation[0] = %v, want 500.0", result[0][2])
+	}
+}
+
+func TestGetCourseElevation_ServerError(t *testing.T) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte("error"))
+	})
+
+	_, client := testServer(t, handler)
+	_, err := client.GetCourseElevation(context.Background(), json.RawMessage(`[[47.0,8.0,null]]`))
+	if err == nil {
+		t.Fatal("expected error")
+	}
+
+	var apiErr *GarminAPIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected GarminAPIError, got %T: %v", err, err)
+	}
+}
+
+// --- SaveCourse tests ---
+
+func TestSaveCourse_Success(t *testing.T) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/course-service/course" {
+			t.Errorf("path = %s, want /course-service/course", r.URL.Path)
+		}
+		if r.Method != http.MethodPost {
+			t.Errorf("method = %s, want POST", r.Method)
+		}
+
+		body, _ := io.ReadAll(r.Body)
+		var course map[string]any
+		if err := json.Unmarshal(body, &course); err != nil {
+			t.Fatalf("unmarshal request: %v", err)
+		}
+		if course["courseName"] != "My Route" {
+			t.Errorf("courseName = %v, want My Route", course["courseName"])
+		}
+
+		_, _ = w.Write([]byte(`{"courseId":789,"courseName":"My Route","distanceMeter":10000,"elevationGainMeter":150,"elevationLossMeter":140}`))
+	})
+
+	_, client := testServer(t, handler)
+	input := json.RawMessage(`{"courseName":"My Route","activityTypePk":2}`)
+	data, err := client.SaveCourse(context.Background(), input)
+	if err != nil {
+		t.Fatalf("SaveCourse: %v", err)
+	}
+
+	var result map[string]any
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if result["courseId"] != float64(789) {
+		t.Errorf("courseId = %v, want 789", result["courseId"])
+	}
+}
+
+func TestSaveCourse_ServerError(t *testing.T) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte("error"))
+	})
+
+	_, client := testServer(t, handler)
+	_, err := client.SaveCourse(context.Background(), json.RawMessage(`{}`))
 	if err == nil {
 		t.Fatal("expected error")
 	}

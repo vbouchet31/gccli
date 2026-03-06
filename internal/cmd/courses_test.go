@@ -6,6 +6,8 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -19,6 +21,24 @@ func coursesTestServer(t *testing.T) *httptest.Server {
 	mux.HandleFunc("/web-gateway/course/owner/", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"coursesForUser":[{"courseId":123,"courseName":"Morning Run","courseType":{"typeKey":"running"},"distanceInMeters":5000,"createdDate":"2024-06-15 10:30:00"}]}`))
+	})
+
+	mux.HandleFunc("/course-service/course/import", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"courseName":"GPX Route","geoPoints":[{"lat":47.0,"lon":8.0,"distance":0},{"lat":47.1,"lon":8.1,"distance":1000}]}`))
+	})
+
+	mux.HandleFunc("/course-service/course/elevation", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`[[47.0,8.0,500.0],[47.1,8.1,510.0]]`))
 	})
 
 	mux.HandleFunc("/course-service/course/favorites", func(w http.ResponseWriter, _ *http.Request) {
@@ -35,6 +55,25 @@ func coursesTestServer(t *testing.T) *httptest.Server {
 		}
 		w.WriteHeader(http.StatusNotFound)
 		_, _ = w.Write([]byte("not found"))
+	})
+
+	mux.HandleFunc("/course-service/course", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		body, _ := io.ReadAll(r.Body)
+		var course map[string]any
+		if err := json.Unmarshal(body, &course); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		name := "GPX Route"
+		if n, ok := course["courseName"].(string); ok {
+			name = n
+		}
+		_, _ = w.Write([]byte(`{"courseId":999,"courseName":"` + name + `","distanceMeter":10000,"elevationGainMeter":150,"elevationLossMeter":140,"createDate":"2024-06-15"}`))
 	})
 
 	mux.HandleFunc("/device-service/devicemessage/messages", func(w http.ResponseWriter, r *http.Request) {
@@ -301,5 +340,154 @@ func TestCourseSend_CourseNotFound(t *testing.T) {
 	err := cmd.Run(g)
 	if err == nil {
 		t.Fatal("expected error, got nil")
+	}
+}
+
+// --- CourseImportCmd tests ---
+
+func newTestGPXFile(t *testing.T) string {
+	t.Helper()
+	dir := t.TempDir()
+	path := filepath.Join(dir, "route.gpx")
+	if err := os.WriteFile(path, []byte("<gpx>test</gpx>"), 0o644); err != nil {
+		t.Fatalf("write temp file: %v", err)
+	}
+	return path
+}
+
+func TestExecute_CoursesImportHelp(t *testing.T) {
+	code := Execute([]string{"courses", "import", "--help"}, "1.0.0", "abc123", "2024-01-01")
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d", code)
+	}
+}
+
+func TestCourseImport_NoAccount(t *testing.T) {
+	var buf bytes.Buffer
+	g := testGlobals(t, &buf, outfmt.Table, "")
+	cmd := &CourseImportCmd{File: "route.gpx", Type: "cycling"}
+	err := cmd.Run(g)
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), "no account specified") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCourseImport_InvalidType(t *testing.T) {
+	var buf bytes.Buffer
+	g := testGlobals(t, &buf, outfmt.Table, "test@example.com")
+	cmd := &CourseImportCmd{File: "route.gpx", Type: "swimming"}
+	err := cmd.Run(g)
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), "unknown activity type") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCourseImport_Success(t *testing.T) {
+	server := coursesTestServer(t)
+	defer server.Close()
+
+	store := newTestSecretsStore(t)
+	overrideLoadSecrets(t, store)
+	overrideNewClient(t, server)
+	storeTestTokens(t, store, "test@example.com", testTokens())
+
+	gpxPath := newTestGPXFile(t)
+
+	var buf bytes.Buffer
+	g := testGlobals(t, &buf, outfmt.Table, "test@example.com")
+	cmd := &CourseImportCmd{File: gpxPath, Type: "cycling"}
+	err := cmd.Run(g)
+	if err != nil {
+		t.Fatalf("expected no error, got: %v", err)
+	}
+}
+
+func TestCourseImport_NameOverride(t *testing.T) {
+	server := coursesTestServer(t)
+	defer server.Close()
+
+	store := newTestSecretsStore(t)
+	overrideLoadSecrets(t, store)
+	overrideNewClient(t, server)
+	storeTestTokens(t, store, "test@example.com", testTokens())
+
+	gpxPath := newTestGPXFile(t)
+
+	// Use JSON output to verify the name in the response.
+	var buf bytes.Buffer
+	g := testGlobals(t, &buf, outfmt.JSON, "test@example.com")
+	cmd := &CourseImportCmd{File: gpxPath, Name: "Sunday Ride", Type: "cycling"}
+	err := cmd.Run(g)
+	if err != nil {
+		t.Fatalf("expected no error, got: %v", err)
+	}
+}
+
+func TestCourseImport_NameFallback(t *testing.T) {
+	// Server returns null courseName to test filename fallback.
+	mux := http.NewServeMux()
+	mux.HandleFunc("/course-service/course/import", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"courseName":null,"geoPoints":[{"lat":47.0,"lon":8.0}]}`))
+	})
+	mux.HandleFunc("/course-service/course/elevation", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`[[47.0,8.0,500.0]]`))
+	})
+	mux.HandleFunc("/course-service/course", func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		var course map[string]any
+		_ = json.Unmarshal(body, &course)
+		w.Header().Set("Content-Type", "application/json")
+		name := course["courseName"].(string)
+		_, _ = w.Write([]byte(`{"courseId":999,"courseName":"` + name + `","distanceMeter":5000}`))
+	})
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	store := newTestSecretsStore(t)
+	overrideLoadSecrets(t, store)
+	overrideNewClient(t, server)
+	storeTestTokens(t, store, "test@example.com", testTokens())
+
+	gpxPath := newTestGPXFile(t)
+
+	var buf bytes.Buffer
+	g := testGlobals(t, &buf, outfmt.Table, "test@example.com")
+	cmd := &CourseImportCmd{File: gpxPath, Type: "hiking"}
+	err := cmd.Run(g)
+	if err != nil {
+		t.Fatalf("expected no error, got: %v", err)
+	}
+	out := buf.String()
+	// Should use filename "route" (without .gpx extension).
+	if !strings.Contains(out, "route") {
+		t.Errorf("expected filename-based name in output, got: %s", out)
+	}
+}
+
+func TestCourseImport_JSON(t *testing.T) {
+	server := coursesTestServer(t)
+	defer server.Close()
+
+	store := newTestSecretsStore(t)
+	overrideLoadSecrets(t, store)
+	overrideNewClient(t, server)
+	storeTestTokens(t, store, "test@example.com", testTokens())
+
+	gpxPath := newTestGPXFile(t)
+
+	var buf bytes.Buffer
+	g := testGlobals(t, &buf, outfmt.JSON, "test@example.com")
+	cmd := &CourseImportCmd{File: gpxPath, Type: "cycling"}
+	err := cmd.Run(g)
+	if err != nil {
+		t.Fatalf("expected no error, got: %v", err)
 	}
 }
