@@ -17,6 +17,7 @@ type CoursesCmd struct {
 	Detail    CourseDetailCmd     `cmd:"" help:"View course details."`
 	Import    CourseImportCmd     `cmd:"" help:"Import a GPX file as a new course."`
 	Send      CourseSendCmd       `cmd:"" help:"Send a course to a device."`
+	Delete    CourseDeleteCmd     `cmd:"" help:"Delete a course."`
 }
 
 // CoursesListCmd lists the user's courses.
@@ -104,9 +105,10 @@ func (c *CourseDetailCmd) Run(g *Globals) error {
 
 // CourseImportCmd imports a GPX file as a new course.
 type CourseImportCmd struct {
-	File string `arg:"" help:"Path to GPX file." type:"existingfile"`
-	Name string `help:"Course name (overrides name from GPX)." short:"n"`
-	Type string `help:"Activity type key (e.g. running, cycling, hiking)." short:"t" default:"cycling"`
+	File    string `arg:"" help:"Path to GPX file." type:"existingfile"`
+	Name    string `help:"Course name (overrides name from GPX)." short:"n"`
+	Type    string `help:"Activity type key (e.g. running, cycling, hiking)." short:"t" default:"cycling"`
+	Privacy int    `help:"Course privacy: 1=public, 2=private, 4=group." short:"p" default:"2" enum:"1,2,4"`
 }
 
 func (c *CourseImportCmd) Run(g *Globals) error {
@@ -144,7 +146,16 @@ func (c *CourseImportCmd) Run(g *Globals) error {
 		if !ok {
 			continue
 		}
-		elevInput = append(elevInput, []any{pt["lat"], pt["lon"], nil})
+		lat := pt["latitude"]
+		lon := pt["longitude"]
+		if lat == nil || lon == nil {
+			lat = pt["lat"]
+			lon = pt["lon"]
+		}
+		if lat == nil || lon == nil {
+			continue
+		}
+		elevInput = append(elevInput, []any{lat, lon, nil})
 	}
 
 	elevJSON, err := json.Marshal(elevInput)
@@ -181,10 +192,26 @@ func (c *CourseImportCmd) Run(g *Globals) error {
 		course["courseName"] = strings.TrimSuffix(filepath.Base(c.File), filepath.Ext(c.File))
 	}
 
-	// Set activity type.
+	// Set activity type and defaults for fields the import response leaves nil.
 	course["activityTypePk"] = typePk
+	if course["coordinateSystem"] == nil {
+		course["coordinateSystem"] = "WGS84"
+	}
+	if course["sourceTypeId"] == nil {
+		course["sourceTypeId"] = 3
+	}
+	if course["startPoint"] == nil && len(geoPoints) > 0 {
+		course["startPoint"] = geoPoints[0]
+	}
 
-	payload, err := json.Marshal(course)
+	// Build save payload with only the fields the API accepts.
+	save := filterCourseFields(course)
+	save["coursePrivacy"] = c.Privacy
+	if save["rulePK"] == nil {
+		save["rulePK"] = 2
+	}
+
+	payload, err := json.Marshal(save)
 	if err != nil {
 		return fmt.Errorf("marshal course: %w", err)
 	}
@@ -265,6 +292,35 @@ func (c *CourseSendCmd) Run(g *Globals) error {
 	return nil
 }
 
+// CourseDeleteCmd deletes a course.
+type CourseDeleteCmd struct {
+	ID    string `arg:"" help:"Course ID."`
+	Force bool   `help:"Skip confirmation prompt." short:"f"`
+}
+
+func (c *CourseDeleteCmd) Run(g *Globals) error {
+	client, err := resolveClient(g)
+	if err != nil {
+		return err
+	}
+
+	ok, err := confirm(os.Stderr, fmt.Sprintf("Delete course %s?", c.ID), c.Force)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		g.UI.Infof("Cancelled")
+		return nil
+	}
+
+	if err := client.DeleteCourse(g.Context, c.ID); err != nil {
+		return fmt.Errorf("delete course: %w", err)
+	}
+
+	g.UI.Successf("Deleted course %s", c.ID)
+	return nil
+}
+
 // parseCourses extracts the course list from the API response.
 // The list endpoint returns {coursesForUser: [...]}.
 func parseCourses(data json.RawMessage) ([]map[string]any, error) {
@@ -305,6 +361,28 @@ func formatCourseRows(courses []map[string]any) [][]string {
 		})
 	}
 	return rows
+}
+
+// courseSaveFields are the fields accepted by the course save endpoint.
+var courseSaveFields = []string{
+	"activityTypePk", "boundingBox", "coordinateSystem", "courseLines",
+	"courseName", "coursePoints", "distanceMeter", "elapsedSeconds",
+	"elevationGainMeter", "elevationLossMeter", "favorite", "geoPoints",
+	"hasPaceBand", "hasPowerGuide", "hasTurnDetectionDisabled", "includeLaps",
+	"matchedToSegments", "openStreetMap", "rulePK", "sourceTypeId",
+	"speedMeterPerSecond", "startPoint", "userProfilePk",
+}
+
+// filterCourseFields returns a new map containing only the non-nil fields
+// accepted by the course save endpoint, dropping extra fields from the import response.
+func filterCourseFields(course map[string]any) map[string]any {
+	save := make(map[string]any, len(courseSaveFields))
+	for _, key := range courseSaveFields {
+		if v, ok := course[key]; ok && v != nil {
+			save[key] = v
+		}
+	}
+	return save
 }
 
 // courseTypeKey extracts the course type from nested courseType.typeKey.
