@@ -3,6 +3,7 @@
 [![ci](https://github.com/bpauli/gccli/actions/workflows/ci.yml/badge.svg)](https://github.com/bpauli/gccli/actions/workflows/ci.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/bpauli/gccli)](https://goreportcard.com/report/github.com/bpauli/gccli)
 [![Docs](https://img.shields.io/badge/docs-gccli.sh-blue)](https://gccli.sh)
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buymeacoffee)](https://buymeacoffee.com/mail7j)
 
 Fast, script-friendly CLI for Garmin Connect. Access activities, health data, body composition, workouts, courses, devices, gear, goals, badges, and more. JSON-first output, multiple accounts, and secure credential storage built in.
 
