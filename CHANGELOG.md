@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-03-11
+
+### Added
+
+- **`events add` command** — Create calendar events via raw JSON payload:
+  - `gccli events add --params '{"eventName":"Race","date":"2026-09-27","eventType":"running"}'`
+  - Supports all Garmin Connect event fields: time, location, distance, privacy, race flag, notes, URL
+  - Set custom goals and training priority directly when creating: `eventCustomization` with `customGoal` (time-based) and `isPrimaryEvent`/`isTrainingEvent`
+- **`events delete` command** — Delete a calendar event by ID with confirmation prompt (`-f` to skip)
+- **Events API methods** — `AddEvent`, `DeleteEvent` in the API client
+- **E2E test for events** — Full lifecycle test: create event with goal → list → delete → verify removed
+- **MFA test coverage** — Tests for `ticketFromURL`, 429 rate limiting, ticket extraction from redirect URL, and signin params forwarding
+
+### Fixed
+
+- **Headless MFA login** — Forward signin query params to the MFA verification endpoint, matching garth behaviour. Without them Garmin SSO silently rejects the MFA submission. Also handle 429 rate limiting and extract tickets from redirect URLs. (Thanks to [@derbauer97](https://github.com/derbauer97) — #23)
+- **Zsh completion** — Fix parse errors from empty case blocks and missing closing brace when sourced with `compinit`
+
+### Docs
+
+- Added Events section to website (feature card, command reference with goal/priority examples)
+- Added events commands to skill reference (`skill/SKILL.md`)
+- Added Buy Me a Coffee badge to README
+
 ## [1.1.0] - 2026-03-06
 
 ### Added
@@ -107,6 +131,7 @@ Initial release of gccli — a fast, script-friendly CLI for Garmin Connect.
 - **CI pipeline** — GitHub Actions for fmt-check, lint, and test
 - **Cross-platform builds** — macOS (amd64/arm64) and Linux (amd64/arm64) via goreleaser
 
+[1.2.0]: https://github.com/bpauli/gccli/releases/tag/v1.2.0
 [1.1.0]: https://github.com/bpauli/gccli/releases/tag/v1.1.0
 [1.0.0]: https://github.com/bpauli/gccli/releases/tag/v1.0.0
 [0.3.0]: https://github.com/bpauli/gccli/releases/tag/v0.3.0
