@@ -35,7 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Docs
 
 - Added Events section to website (feature card, command reference with goal/priority examples)
-- Added events commands to skill reference (`skill/SKILL.md`)
+- Added events commands to skill reference (`skills/gccli/SKILL.md`)
 - Added Buy Me a Coffee badge to README
 
 ## [1.1.0] - 2026-03-06
@@ -75,7 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Docs
 
 - Added Courses section to website (hero badge, feature card, command reference)
-- Added courses commands to skill reference (`skill/SKILL.md`)
+- Added courses commands to skill reference (`skills/gccli/SKILL.md`)
 - Added shell completions card to install section on website
 
 ## [0.3.0] - 2026-02-17
