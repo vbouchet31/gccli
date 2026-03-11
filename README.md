@@ -357,6 +357,7 @@ gccli workouts download <id> --output workout.fit
 gccli workouts upload ./workout.json   # See JSON structure below
 gccli workouts schedule add <id> <YYYY-MM-DD>
 gccli workouts schedule list <YYYY-MM-DD>
+gccli workouts schedule list --start 2024-06-01 --end 2024-06-30
 gccli workouts schedule remove <schedule-id>
 gccli workouts schedule remove <schedule-id> --force
 gccli workouts delete <id>

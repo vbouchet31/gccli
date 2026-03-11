@@ -92,6 +92,7 @@ Common commands
 - Upload workout (JSON): `gccli workouts upload ./workout.json`
 - Schedule workout: `gccli workouts schedule add <id> 2024-06-20`
 - List scheduled workouts: `gccli workouts schedule list 2024-06-20`
+- List scheduled workouts in range: `gccli workouts schedule list --start 2024-06-01 --end 2024-06-30`
 - Remove scheduled workout: `gccli workouts schedule remove <schedule-id>` (use `--force` to skip confirmation)
 - Delete workout: `gccli workouts delete <id>`
 - Create running workout with pace: `gccli workouts create "Easy Run" --type run --step "warmup:5m" --step "run:20m@pace:5:00-5:30" --step "cooldown:5m"`
