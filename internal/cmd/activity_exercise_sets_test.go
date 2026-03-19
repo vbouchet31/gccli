@@ -12,6 +12,9 @@ import (
 	"github.com/bpauli/gccli/internal/outfmt"
 )
 
+func ptrFloat64(v float64) *float64 { return &v }
+func ptrInt(v int) *int             { return &v }
+
 func TestParseOneExercise_Valid(t *testing.T) {
 	tests := []struct {
 		input    string
@@ -19,6 +22,8 @@ func TestParseOneExercise_Valid(t *testing.T) {
 		name     string
 		reps     int
 		weightMg float64
+		duration *float64
+		restSecs *int
 	}{
 		{
 			input:    "BENCH_PRESS/BARBELL_BENCH_PRESS:12@20",
@@ -26,6 +31,8 @@ func TestParseOneExercise_Valid(t *testing.T) {
 			name:     "BARBELL_BENCH_PRESS",
 			reps:     12,
 			weightMg: 20000,
+			duration: nil,
+			restSecs: nil,
 		},
 		{
 			input:    "lunge/dumbbell_lunge:20@24kg",
@@ -33,6 +40,8 @@ func TestParseOneExercise_Valid(t *testing.T) {
 			name:     "DUMBBELL_LUNGE",
 			reps:     20,
 			weightMg: 24000,
+			duration: nil,
+			restSecs: nil,
 		},
 		{
 			input:    "PULL_UP/WIDE_GRIP_LAT_PULLDOWN:12@41.5",
@@ -40,6 +49,8 @@ func TestParseOneExercise_Valid(t *testing.T) {
 			name:     "WIDE_GRIP_LAT_PULLDOWN",
 			reps:     12,
 			weightMg: 41500,
+			duration: nil,
+			restSecs: nil,
 		},
 		{
 			input:    "SQUAT/BODYWEIGHT_SQUAT:15@0",
@@ -47,15 +58,63 @@ func TestParseOneExercise_Valid(t *testing.T) {
 			name:     "BODYWEIGHT_SQUAT",
 			reps:     15,
 			weightMg: 0,
+			duration: nil,
+			restSecs: nil,
+		},
+		{
+			input:    "BENCH_PRESS/BARBELL_BENCH_PRESS:12@20:d30:r60",
+			category: "BENCH_PRESS",
+			name:     "BARBELL_BENCH_PRESS",
+			reps:     12,
+			weightMg: 20000,
+			duration: ptrFloat64(30),
+			restSecs: ptrInt(60),
+		},
+		{
+			input:    "BENCH_PRESS/BARBELL_BENCH_PRESS:10@25:r45:d25",
+			category: "BENCH_PRESS",
+			name:     "BARBELL_BENCH_PRESS",
+			reps:     10,
+			weightMg: 25000,
+			duration: ptrFloat64(25),
+			restSecs: ptrInt(45),
+		},
+		{
+			input:    "BENCH_PRESS/BARBELL_BENCH_PRESS:8@30:d20",
+			category: "BENCH_PRESS",
+			name:     "BARBELL_BENCH_PRESS",
+			reps:     8,
+			weightMg: 30000,
+			duration: ptrFloat64(20),
+			restSecs: nil,
+		},
+		{
+			input:    "BENCH_PRESS/BARBELL_BENCH_PRESS:8@30:r60",
+			category: "BENCH_PRESS",
+			name:     "BARBELL_BENCH_PRESS",
+			reps:     8,
+			weightMg: 30000,
+			duration: ptrFloat64(0),
+			restSecs: ptrInt(60),
+		},
+		{
+			input:    "BENCH_PRESS/BARBELL_BENCH_PRESS:8@30:d:r",
+			category: "BENCH_PRESS",
+			name:     "BARBELL_BENCH_PRESS",
+			reps:     8,
+			weightMg: 30000,
+			duration: ptrFloat64(0),
+			restSecs: ptrInt(0),
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			set, err := parseOneExercise(tt.input)
+			parsed, err := parseOneExercise(tt.input)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
+			set := parsed.set
 			if set.SetType != "ACTIVE" {
 				t.Errorf("setType = %q, want ACTIVE", set.SetType)
 			}
@@ -74,6 +133,24 @@ func TestParseOneExercise_Valid(t *testing.T) {
 			if set.Weight != tt.weightMg {
 				t.Errorf("weight = %f, want %f", set.Weight, tt.weightMg)
 			}
+			if tt.duration == nil {
+				if set.Duration != nil {
+					t.Errorf("duration = %v, want nil", set.Duration)
+				}
+			} else {
+				if set.Duration == nil || *set.Duration != *tt.duration {
+					t.Errorf("duration = %v, want %v", set.Duration, *tt.duration)
+				}
+			}
+			if tt.restSecs == nil {
+				if parsed.restSecs != nil {
+					t.Errorf("restSecs = %v, want nil", parsed.restSecs)
+				}
+			} else {
+				if parsed.restSecs == nil || *parsed.restSecs != *tt.restSecs {
+					t.Errorf("restSecs = %v, want %v", parsed.restSecs, *tt.restSecs)
+				}
+			}
 		})
 	}
 }
@@ -87,6 +164,12 @@ func TestParseOneExercise_Invalid(t *testing.T) {
 		{"BENCH_PRESS:12@20", "expected CATEGORY/NAME"},
 		{"BENCH_PRESS/BARBELL:abc@20", "invalid rep count"},
 		{"BENCH_PRESS/BARBELL:12@abc", "invalid weight"},
+		{"BENCH_PRESS/BARBELL:12@20:dabc", "invalid duration"},
+		{"BENCH_PRESS/BARBELL:12@20:r-5", "invalid rest"},
+		{"BENCH_PRESS/BARBELL:12@20:d10:d20", "duplicate :d"},
+		{"BENCH_PRESS/BARBELL:12@20:r10:r20", "duplicate :r"},
+		{"BENCH_PRESS/BARBELL:12@20:x10", "unknown suffix"},
+		{"BENCH_PRESS/BARBELL:12@20:d1:r2:extra", "expected format"},
 	}
 
 	for _, tt := range tests {
