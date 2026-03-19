@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-03-19
+
+### Added
+
+- **Per-set duration and rest time** — exercise sets now support individual `:dSECS` and `:rSECS` suffixes for per-set duration and rest control (#34)
+
+### Changed
+
+- **Breaking:** removed global `--rest` flag from `activity exercise-sets set` — use per-set `:rSECS` suffix instead
+
+### Docs
+
+- Updated README, skill reference, and docs site with new exercise set format examples
+
 ## [1.4.0] - 2026-03-19
 
 ### Added
@@ -161,6 +175,7 @@ Initial release of gccli — a fast, script-friendly CLI for Garmin Connect.
 - **CI pipeline** — GitHub Actions for fmt-check, lint, and test
 - **Cross-platform builds** — macOS (amd64/arm64) and Linux (amd64/arm64) via goreleaser
 
+[1.5.0]: https://github.com/bpauli/gccli/releases/tag/v1.5.0
 [1.4.0]: https://github.com/bpauli/gccli/releases/tag/v1.4.0
 [1.3.0]: https://github.com/bpauli/gccli/releases/tag/v1.3.0
 [1.2.0]: https://github.com/bpauli/gccli/releases/tag/v1.2.0
