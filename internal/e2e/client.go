@@ -13,8 +13,10 @@ import (
 
 // cachedTokens stores tokens across tests in the same test binary run so
 // we only authenticate once against the real Garmin SSO.
+// loginErr is stored on first auth failure so subsequent tests skip immediately.
 var (
 	cachedTokens *garminauth.Tokens
+	loginErr     error
 	tokensMu     sync.Mutex
 )
 
@@ -38,6 +40,10 @@ func getOrLogin(t *testing.T) *garminauth.Tokens {
 	tokensMu.Lock()
 	defer tokensMu.Unlock()
 
+	if loginErr != nil {
+		t.Skipf("skipping: prior auth failed: %v", loginErr)
+	}
+
 	if cachedTokens != nil && !cachedTokens.IsExpired() {
 		return cachedTokens
 	}
@@ -51,6 +57,7 @@ func getOrLogin(t *testing.T) *garminauth.Tokens {
 		garminauth.LoginOptions{},
 	)
 	if err != nil {
+		loginErr = err
 		t.Fatalf("E2E login failed: %v", err)
 	}
 

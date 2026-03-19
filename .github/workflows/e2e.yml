@@ -21,7 +21,7 @@ jobs:
         uses: tailscale/github-action@v3
         with:
           authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
-          args: --exit-node=ubuntu-8gb-nbg1-1
+          args: --exit-node=100.103.58.37
       - name: Run E2E tests
         env:
           GARMIN_EMAIL: ${{ secrets.GARMIN_EMAIL }}
