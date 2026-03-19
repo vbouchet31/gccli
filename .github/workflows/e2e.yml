@@ -17,6 +17,11 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v3
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+          args: --exit-node=ubuntu-8gb-nbg1-1
       - name: Run E2E tests
         env:
           GARMIN_EMAIL: ${{ secrets.GARMIN_EMAIL }}
