@@ -45,7 +45,7 @@ Common commands
 - Activity HR zones: `gccli activity hr-zones <id>`
 - Activity power zones: `gccli activity power-zones <id>`
 - Activity exercise sets (show): `gccli activity exercise-sets <id>`
-- Set exercise sets: `gccli activity exercise-sets set <id> -e "CATEGORY/NAME:reps@weightkg" [-e ...] [--rest 60]`
+- Set exercise sets: `gccli activity exercise-sets set <id> -e "CATEGORY/NAME:reps@weightkg[:dSECS][:rSECS]" [-e ...]`
 - Activity gear: `gccli activity gear <id>`
 - Download activity (FIT): `gccli activity download <id> --format fit`
 - Download activity (GPX): `gccli activity download <id> --format gpx --output track.gpx`
@@ -156,14 +156,15 @@ When a user wants to log a strength training activity with exercises described i
 3. Show the user the proposed mapping and ask for confirmation before proceeding.
 4. Create the activity: `gccli activity create --name "Upper Body" --type strength_training --duration 34m --date 2024-06-15T19:01:00`
 5. Extract the activity ID from the output (JSON: activityId field, table: "Created activity <id>").
-6. Add exercise sets: `gccli activity exercise-sets set <id> -e "CATEGORY/NAME:reps@weightkg" [-e ...] [--rest 60]`
+6. Add exercise sets: `gccli activity exercise-sets set <id> -e "CATEGORY/NAME:reps@weightkg[:dSECS][:rSECS]" [-e ...]`
 
-Exercise set format: `CATEGORY/NAME:reps@weightkg`
+Exercise set format: `CATEGORY/NAME:reps@weightkg[:dSECS][:rSECS]`
 - CATEGORY: exercise category (e.g. BENCH_PRESS, PULL_UP, LATERAL_RAISE, LUNGE, CALF_RAISE)
 - NAME: specific exercise name within category (e.g. BARBELL_BENCH_PRESS, WIDE_GRIP_LAT_PULLDOWN)
 - reps: number of repetitions
 - weightkg: weight in kg (e.g. 20 for 20kg, 41.5 for 41.5kg, 0 for bodyweight)
-- --rest: optional rest duration in seconds between all sets
+- :dSECS: optional set duration in seconds (e.g. :d30 for 30s)
+- :rSECS: optional rest duration in seconds after this set (e.g. :r60 for 60s)
 
 Each -e flag is one set. For 3 sets of 12 reps, use three -e flags with the same exercise.
 
@@ -172,16 +173,15 @@ Example full workflow:
 gccli activity create --name "Upper Body" --type strength_training --duration 34m --date 2026-03-13T19:01:00 --json
 # Extract activityId from JSON response
 gccli activity exercise-sets set <id> \
-  -e "PULL_UP/WIDE_GRIP_LAT_PULLDOWN:12@41" \
-  -e "PULL_UP/WIDE_GRIP_LAT_PULLDOWN:12@41" \
-  -e "PULL_UP/WIDE_GRIP_LAT_PULLDOWN:12@41" \
-  -e "LATERAL_RAISE/DUMBBELL_LATERAL_RAISE:12@8" \
-  -e "LATERAL_RAISE/DUMBBELL_LATERAL_RAISE:12@8" \
-  -e "LATERAL_RAISE/DUMBBELL_LATERAL_RAISE:12@8" \
-  -e "BENCH_PRESS/BARBELL_BENCH_PRESS:12@20" \
-  -e "BENCH_PRESS/BARBELL_BENCH_PRESS:8@20" \
-  -e "BENCH_PRESS/BARBELL_BENCH_PRESS:5@20" \
-  --rest 60
+  -e "PULL_UP/WIDE_GRIP_LAT_PULLDOWN:12@41:d30:r60" \
+  -e "PULL_UP/WIDE_GRIP_LAT_PULLDOWN:12@41:d30:r60" \
+  -e "PULL_UP/WIDE_GRIP_LAT_PULLDOWN:12@41:d30:r90" \
+  -e "LATERAL_RAISE/DUMBBELL_LATERAL_RAISE:12@8:d25:r60" \
+  -e "LATERAL_RAISE/DUMBBELL_LATERAL_RAISE:12@8:d25:r60" \
+  -e "LATERAL_RAISE/DUMBBELL_LATERAL_RAISE:12@8:d25:r90" \
+  -e "BENCH_PRESS/BARBELL_BENCH_PRESS:12@20:d30:r60" \
+  -e "BENCH_PRESS/BARBELL_BENCH_PRESS:8@20:d35:r60" \
+  -e "BENCH_PRESS/BARBELL_BENCH_PRESS:5@20:d40"
 ```
 
 Notes

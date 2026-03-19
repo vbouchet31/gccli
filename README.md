@@ -267,7 +267,7 @@ gccli activity weather <id>
 gccli activity hr-zones <id>
 gccli activity power-zones <id>
 gccli activity exercise-sets <id>
-gccli activity exercise-sets set <id> -e "BENCH_PRESS/BARBELL_BENCH_PRESS:12@20" -e "BENCH_PRESS/BARBELL_BENCH_PRESS:10@25" --rest 60
+gccli activity exercise-sets set <id> -e "BENCH_PRESS/BARBELL_BENCH_PRESS:12@20:d30:r60" -e "BENCH_PRESS/BARBELL_BENCH_PRESS:10@25:d25"
 gccli activity gear <id>
 
 # Download and upload
