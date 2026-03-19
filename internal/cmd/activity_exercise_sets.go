@@ -10,8 +10,7 @@ import (
 // ActivityExerciseSetsSetCmd sets exercise sets for a strength training activity.
 type ActivityExerciseSetsSetCmd struct {
 	ID       string   `arg:"" help:"Activity ID."`
-	Exercise []string `help:"Exercise set in format CATEGORY/NAME:reps@weightkg (e.g. BENCH_PRESS/BARBELL_BENCH_PRESS:12@20)." short:"e" required:""`
-	Rest     int      `help:"Rest duration in seconds between sets (0 to skip)." default:"0"`
+	Exercise []string `help:"Exercise set in format CATEGORY/NAME:reps@weightkg[:dSECS][:rSECS] (e.g. BENCH_PRESS/BARBELL_BENCH_PRESS:12@20:d30:r60)." short:"e" required:""`
 }
 
 // exerciseSet represents a single exercise set for the Garmin API.
@@ -42,7 +41,7 @@ func (c *ActivityExerciseSetsSetCmd) Run(g *Globals) error {
 		return fmt.Errorf("invalid activity ID: %w", err)
 	}
 
-	sets, err := parseExerciseSets(c.Exercise, c.Rest)
+	sets, err := parseExerciseSets(c.Exercise)
 	if err != nil {
 		return err
 	}
@@ -66,9 +65,11 @@ func (c *ActivityExerciseSetsSetCmd) Run(g *Globals) error {
 }
 
 // parseExerciseSets parses exercise flag values into API-compatible sets.
-// Format: CATEGORY/NAME:reps@weightkg
-// Example: BENCH_PRESS/BARBELL_BENCH_PRESS:12@20
-func parseExerciseSets(exercises []string, restSecs int) ([]exerciseSet, error) {
+// Each exercise may include an optional :rSECS suffix for per-set rest time.
+// When present, a REST set is inserted after the active set.
+// Format: CATEGORY/NAME:reps@weightkg[:dSECS][:rSECS]
+// Example: BENCH_PRESS/BARBELL_BENCH_PRESS:12@20:d30:r60
+func parseExerciseSets(exercises []string) ([]exerciseSet, error) {
 	var sets []exerciseSet
 
 	for i, ex := range exercises {
@@ -78,9 +79,8 @@ func parseExerciseSets(exercises []string, restSecs int) ([]exerciseSet, error) 
 		}
 		sets = append(sets, parsed.set)
 
-		// Add rest between sets if requested (not after the last set).
-		if restSecs > 0 && i < len(exercises)-1 {
-			dur := float64(restSecs)
+		if parsed.restSecs != nil {
+			dur := float64(*parsed.restSecs)
 			sets = append(sets, exerciseSet{
 				Exercises:       []exerciseRef{},
 				RepetitionCount: nil,

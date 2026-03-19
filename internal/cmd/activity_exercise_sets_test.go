@@ -185,48 +185,86 @@ func TestParseOneExercise_Invalid(t *testing.T) {
 	}
 }
 
-func TestParseExerciseSets_WithRest(t *testing.T) {
+func TestParseExerciseSets_PerSetRest(t *testing.T) {
 	exercises := []string{
-		"BENCH_PRESS/BARBELL_BENCH_PRESS:12@20",
-		"BENCH_PRESS/BARBELL_BENCH_PRESS:10@20",
+		"BENCH_PRESS/BARBELL_BENCH_PRESS:12@20:d30:r60",
+		"BENCH_PRESS/BARBELL_BENCH_PRESS:10@25:d25:r45",
+		"BENCH_PRESS/BARBELL_BENCH_PRESS:8@30:d20",
 	}
 
-	sets, err := parseExerciseSets(exercises, 60)
+	sets, err := parseExerciseSets(exercises)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	// 2 active + 1 rest between them.
-	if len(sets) != 3 {
-		t.Fatalf("sets count = %d, want 3", len(sets))
+	// 3 active + 2 rest = 5 sets total.
+	if len(sets) != 5 {
+		t.Fatalf("sets count = %d, want 5", len(sets))
 	}
 	if sets[0].SetType != "ACTIVE" {
 		t.Errorf("set[0].setType = %q, want ACTIVE", sets[0].SetType)
+	}
+	if sets[0].Duration == nil || *sets[0].Duration != 30 {
+		t.Errorf("set[0].duration = %v, want 30", sets[0].Duration)
 	}
 	if sets[1].SetType != "REST" {
 		t.Errorf("set[1].setType = %q, want REST", sets[1].SetType)
 	}
 	if sets[1].Duration == nil || *sets[1].Duration != 60 {
-		t.Errorf("rest duration = %v, want 60", sets[1].Duration)
+		t.Errorf("set[1].rest duration = %v, want 60", sets[1].Duration)
 	}
 	if sets[2].SetType != "ACTIVE" {
 		t.Errorf("set[2].setType = %q, want ACTIVE", sets[2].SetType)
 	}
+	if sets[3].SetType != "REST" {
+		t.Errorf("set[3].setType = %q, want REST", sets[3].SetType)
+	}
+	if sets[3].Duration == nil || *sets[3].Duration != 45 {
+		t.Errorf("set[3].rest duration = %v, want 45", sets[3].Duration)
+	}
+	if sets[4].SetType != "ACTIVE" {
+		t.Errorf("set[4].setType = %q, want ACTIVE", sets[4].SetType)
+	}
+	if sets[4].Duration == nil || *sets[4].Duration != 20 {
+		t.Errorf("set[4].duration = %v, want 20", sets[4].Duration)
+	}
 }
 
-func TestParseExerciseSets_NoRest(t *testing.T) {
+func TestParseExerciseSets_NoSuffixes(t *testing.T) {
 	exercises := []string{
 		"BENCH_PRESS/BARBELL_BENCH_PRESS:12@20",
 		"BENCH_PRESS/BARBELL_BENCH_PRESS:10@20",
 	}
 
-	sets, err := parseExerciseSets(exercises, 0)
+	sets, err := parseExerciseSets(exercises)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
 	if len(sets) != 2 {
 		t.Fatalf("sets count = %d, want 2", len(sets))
+	}
+	if sets[0].Duration != nil {
+		t.Errorf("set[0].duration = %v, want nil", sets[0].Duration)
+	}
+}
+
+func TestParseExerciseSets_LastExerciseWithRest(t *testing.T) {
+	exercises := []string{
+		"BENCH_PRESS/BARBELL_BENCH_PRESS:12@20:r60",
+	}
+
+	sets, err := parseExerciseSets(exercises)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// 1 active + 1 rest = 2 (REST inserted even for last exercise).
+	if len(sets) != 2 {
+		t.Fatalf("sets count = %d, want 2", len(sets))
+	}
+	if sets[1].SetType != "REST" {
+		t.Errorf("set[1].setType = %q, want REST", sets[1].SetType)
 	}
 }
 
@@ -255,10 +293,9 @@ func TestActivityExerciseSetsSet_Success(t *testing.T) {
 	cmd := &ActivityExerciseSetsSetCmd{
 		ID: "99999",
 		Exercise: []string{
-			"BENCH_PRESS/BARBELL_BENCH_PRESS:12@20",
+			"BENCH_PRESS/BARBELL_BENCH_PRESS:12@20:r60",
 			"BENCH_PRESS/BARBELL_BENCH_PRESS:10@25",
 		},
-		Rest: 60,
 	}
 	err := cmd.Run(g)
 	if err != nil {
