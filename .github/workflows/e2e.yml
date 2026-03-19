@@ -18,10 +18,13 @@ jobs:
           go-version-file: go.mod
           cache: true
       - name: Connect to Tailscale
-        uses: tailscale/github-action@v3
+        uses: tailscale/github-action@v4
         with:
-          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
-          args: --exit-node=100.103.58.37
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+      - name: Route traffic through exit node
+        run: sudo tailscale set --exit-node=100.103.58.37
       - name: Run E2E tests
         env:
           GARMIN_EMAIL: ${{ secrets.GARMIN_EMAIL }}
