@@ -133,6 +133,9 @@ Common commands
 - Profile settings: `gccli profile settings`
 - Hydration: `gccli hydration [date]`
 - Log water: `gccli hydration add 500`
+- Nutrition food log: `gccli nutrition [date]`
+- Nutrition meals: `gccli nutrition meals [date]`
+- Nutrition settings: `gccli nutrition settings [date]`
 - Training plans: `gccli training plans --locale en`
 - Training plan detail: `gccli training plan <id>`
 - Menstrual cycle: `gccli wellness menstrual-cycle --start-date 2024-01-01 --end-date 2024-03-31`

@@ -270,6 +270,7 @@
               <span class="badge">Events</span>
               <span class="badge">Training</span>
               <span class="badge">Hydration</span>
+              <span class="badge">Nutrition</span>
               <span class="badge">Wellness</span>
               <span class="badge">Profile</span>
             </div>
@@ -462,6 +463,11 @@ gccli activities list --limit 5</pre>
             <div class="feature-icon orange">&#x1f4a7;</div>
             <h3>Hydration</h3>
             <p>View and log daily water intake. Track hydration by date.</p>
+          </div>
+          <div class="feature-card fade-in">
+            <div class="feature-icon yellow">&#x1f372;</div>
+            <h3>Nutrition</h3>
+            <p>View daily food logs, meal summaries, and nutrition settings by date.</p>
           </div>
           <div class="feature-card fade-in">
             <div class="feature-icon rose">&#x1f33f;</div>
@@ -664,12 +670,15 @@ gccli activities list --limit 5</pre>
             </div>
           </div>
 
-          <!-- Hydration, Profile, Training, Wellness -->
+          <!-- Hydration, Nutrition, Profile, Training, Wellness -->
           <div class="cmd-group fade-in">
-            <div class="cmd-header"><h3>Hydration, Profile, Training, Wellness &amp; Utilities</h3><span class="cmd-arrow">&#x25B6;</span></div>
+            <div class="cmd-header"><h3>Hydration, Nutrition, Profile, Training, Wellness &amp; Utilities</h3><span class="cmd-arrow">&#x25B6;</span></div>
             <div class="cmd-body">
               <div class="cmd-row"><div class="cmd">gccli hydration [date]</div><div class="desc">View hydration data</div></div>
               <div class="cmd-row"><div class="cmd">gccli hydration add 500</div><div class="desc">Log 500ml of water</div></div>
+              <div class="cmd-row"><div class="cmd">gccli nutrition [date]</div><div class="desc">View daily food log</div></div>
+              <div class="cmd-row"><div class="cmd">gccli nutrition meals [date]</div><div class="desc">View meal summaries</div></div>
+              <div class="cmd-row"><div class="cmd">gccli nutrition settings [date]</div><div class="desc">View nutrition settings</div></div>
               <div class="cmd-row"><div class="cmd">gccli profile</div><div class="desc">User profile</div></div>
               <div class="cmd-row"><div class="cmd">gccli profile settings</div><div class="desc">Account settings</div></div>
               <div class="cmd-row"><div class="cmd">gccli training plans --locale en</div><div class="desc">Browse training plans</div></div>
