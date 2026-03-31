@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-03-31
+
+### Added
+
+- **`nutrition` command group** — View daily food logs, meal summaries, and nutrition settings by date (#36)
+  - `gccli nutrition [date]` — View daily food log
+  - `gccli nutrition meals [date]` — View meal summaries
+  - `gccli nutrition settings [date]` — View nutrition settings
+
+### Tests
+
+- Added missing nutrition command test coverage: NoAccount, InvalidDate, and ServerError paths (#37)
+
 ## [1.5.0] - 2026-03-19
 
 ### Added
@@ -175,6 +188,7 @@ Initial release of gccli — a fast, script-friendly CLI for Garmin Connect.
 - **CI pipeline** — GitHub Actions for fmt-check, lint, and test
 - **Cross-platform builds** — macOS (amd64/arm64) and Linux (amd64/arm64) via goreleaser
 
+[1.6.0]: https://github.com/bpauli/gccli/releases/tag/v1.6.0
 [1.5.0]: https://github.com/bpauli/gccli/releases/tag/v1.5.0
 [1.4.0]: https://github.com/bpauli/gccli/releases/tag/v1.4.0
 [1.3.0]: https://github.com/bpauli/gccli/releases/tag/v1.3.0
