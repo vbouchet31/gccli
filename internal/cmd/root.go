@@ -42,6 +42,7 @@ type CLI struct {
 	Records    RecordsCmd    `cmd:"" help:"View personal records."`
 	Profile    ProfileCmd    `cmd:"" help:"View user profile."`
 	Hydration  HydrationCmd  `cmd:"" help:"Track hydration."`
+	Nutrition  NutritionCmd  `cmd:"" help:"View nutrition data."`
 	Training   TrainingCmd   `cmd:"" help:"View training plans."`
 	Events     EventsCmd     `cmd:"" help:"Manage calendar events."`
 	Wellness   WellnessCmd   `cmd:"" help:"View wellness data."`

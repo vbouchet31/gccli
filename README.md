@@ -21,6 +21,7 @@ Fast, script-friendly CLI for Garmin Connect. Access activities, health data, bo
 - **Training** — browse and view training plans
 - **Profile** — user profile and settings
 - **Hydration** — view and log daily water intake
+- **Nutrition** — view daily food logs, meals, and nutrition settings
 - **Events** — list, add, and delete calendar events (races, group rides, etc.) with goals and training priority support
 - **Wellness** — menstrual cycle data, pregnancy summary
 - **Multiple accounts** — manage multiple Garmin accounts via `--account` flag
@@ -533,6 +534,14 @@ gccli profile settings
 gccli hydration [date]                 # View hydration data
 gccli hydration add 500                # Log 500ml of water
 gccli hydration add 500 --date 2024-06-15
+```
+
+### Nutrition
+
+```bash
+gccli nutrition [date]                 # View daily food log
+gccli nutrition meals [date]           # View meal summaries
+gccli nutrition settings [date]        # View nutrition settings
 ```
 
 ### Training Plans
