@@ -113,29 +113,17 @@ func loginHeadless(ctx context.Context, email, password string, opts LoginOption
 		return nil, fmt.Errorf("extract CSRF: %w", err)
 	}
 
-	// Step 3: POST credentials to SSO signin.
+	// Step 3: POST credentials to SSO signin (with retry on 429/5xx).
+	signinURL := ep.SSOSignin + "?" + signinParams.Encode()
 	formData := url.Values{
 		"username": {email},
 		"password": {password},
 		"embed":    {"true"},
 		"_csrf":    {csrf},
 	}
-	req, err = http.NewRequestWithContext(ctx, http.MethodPost,
-		ep.SSOSignin+"?"+signinParams.Encode(),
-		strings.NewReader(formData.Encode()))
+	body, err = postSigninWithRetry(ctx, client, signinURL, formData, ep.SSOSignin)
 	if err != nil {
-		return nil, fmt.Errorf("create credentials request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Referer", ep.SSOSignin)
-	resp, err = client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("sso signin: %w", err)
-	}
-	body, err = io.ReadAll(resp.Body)
-	_ = resp.Body.Close()
-	if err != nil {
-		return nil, fmt.Errorf("read signin response: %w", err)
+		return nil, err
 	}
 
 	// Check for MFA challenge.
@@ -406,6 +394,51 @@ func getTitle(htmlBody string) (string, error) {
 	walk(doc)
 
 	return title, nil
+}
+
+// ssoRetryDelays defines the backoff delays for retrying SSO signin on 429/5xx.
+var ssoRetryDelays = []time.Duration{2 * time.Second, 5 * time.Second, 10 * time.Second}
+
+// postSigninWithRetry posts credentials to SSO signin, retrying on 429 and 5xx
+// responses with exponential backoff.
+func postSigninWithRetry(ctx context.Context, client *http.Client, signinURL string, formData url.Values, referer string) ([]byte, error) {
+	var body []byte
+	var lastErr error
+
+	for attempt := range len(ssoRetryDelays) + 1 {
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, signinURL,
+			strings.NewReader(formData.Encode()))
+		if err != nil {
+			return nil, fmt.Errorf("create credentials request: %w", err)
+		}
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		req.Header.Set("Referer", referer)
+
+		resp, err := client.Do(req)
+		if err != nil {
+			return nil, fmt.Errorf("sso signin: %w", err)
+		}
+		body, err = io.ReadAll(resp.Body)
+		_ = resp.Body.Close()
+		if err != nil {
+			return nil, fmt.Errorf("read signin response: %w", err)
+		}
+
+		if resp.StatusCode != http.StatusTooManyRequests && resp.StatusCode < 500 {
+			return body, nil
+		}
+
+		lastErr = fmt.Errorf("sso signin returned %d", resp.StatusCode)
+		if attempt < len(ssoRetryDelays) {
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			case <-time.After(ssoRetryDelays[attempt]):
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("sso signin: rate limited after %d attempts: %w", len(ssoRetryDelays)+1, lastErr)
 }
 
 // getTicket extracts the service ticket from SSO response HTML.

@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 )
 
 // mockSSO creates a test server that simulates the Garmin SSO flow.
@@ -722,6 +723,109 @@ func TestLoginHeadless_ContextCancelled(t *testing.T) {
 	cancel() // Cancel immediately.
 
 	_, err := loginHeadless(ctx, "test@example.com", "correctpass", LoginOptions{}, ep)
+	if err == nil {
+		t.Fatal("expected error for cancelled context")
+	}
+}
+
+func TestPostSigninWithRetry_RetriesOn429(t *testing.T) {
+	origDelays := ssoRetryDelays
+	ssoRetryDelays = []time.Duration{1 * time.Millisecond, 1 * time.Millisecond, 1 * time.Millisecond}
+	t.Cleanup(func() { ssoRetryDelays = origDelays })
+
+	attempts := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		attempts++
+		if attempts <= 2 {
+			w.WriteHeader(http.StatusTooManyRequests)
+			_, _ = w.Write([]byte(`{"error":"rate limited"}`))
+			return
+		}
+		// Third attempt succeeds.
+		w.Header().Set("Content-Type", "text/html")
+		_, _ = w.Write([]byte(`<html><title>Success</title><script>embed?ticket=ST-123"</script></html>`))
+	}))
+	t.Cleanup(srv.Close)
+
+	formData := url.Values{"username": {"test"}, "password": {"pass"}, "embed": {"true"}}
+	body, err := postSigninWithRetry(context.Background(), srv.Client(), srv.URL, formData, srv.URL)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if attempts != 3 {
+		t.Errorf("attempts = %d, want 3", attempts)
+	}
+	ticket, err := getTicket(string(body))
+	if err != nil {
+		t.Fatalf("getTicket: %v", err)
+	}
+	if ticket != "ST-123" {
+		t.Errorf("ticket = %q, want ST-123", ticket)
+	}
+}
+
+func TestPostSigninWithRetry_AllRetriesExhausted(t *testing.T) {
+	origDelays := ssoRetryDelays
+	ssoRetryDelays = []time.Duration{1 * time.Millisecond, 1 * time.Millisecond, 1 * time.Millisecond}
+	t.Cleanup(func() { ssoRetryDelays = origDelays })
+
+	attempts := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		attempts++
+		w.WriteHeader(http.StatusTooManyRequests)
+	}))
+	t.Cleanup(srv.Close)
+
+	formData := url.Values{"username": {"test"}}
+	_, err := postSigninWithRetry(context.Background(), srv.Client(), srv.URL, formData, srv.URL)
+	if err == nil {
+		t.Fatal("expected error after all retries exhausted")
+	}
+	if !strings.Contains(err.Error(), "rate limited") {
+		t.Errorf("error = %q, want to contain 'rate limited'", err.Error())
+	}
+	if attempts != 4 {
+		t.Errorf("attempts = %d, want 4 (1 initial + 3 retries)", attempts)
+	}
+}
+
+func TestPostSigninWithRetry_NoRetryOnSuccess(t *testing.T) {
+	attempts := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		attempts++
+		w.Header().Set("Content-Type", "text/html")
+		_, _ = w.Write([]byte(`<html>ok</html>`))
+	}))
+	t.Cleanup(srv.Close)
+
+	formData := url.Values{"username": {"test"}}
+	_, err := postSigninWithRetry(context.Background(), srv.Client(), srv.URL, formData, srv.URL)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if attempts != 1 {
+		t.Errorf("attempts = %d, want 1", attempts)
+	}
+}
+
+func TestPostSigninWithRetry_ContextCancelled(t *testing.T) {
+	origDelays := ssoRetryDelays
+	ssoRetryDelays = []time.Duration{10 * time.Second}
+	t.Cleanup(func() { ssoRetryDelays = origDelays })
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusTooManyRequests)
+	}))
+	t.Cleanup(srv.Close)
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	formData := url.Values{"username": {"test"}}
+	go func() {
+		time.Sleep(50 * time.Millisecond)
+		cancel()
+	}()
+	_, err := postSigninWithRetry(ctx, srv.Client(), srv.URL, formData, srv.URL)
 	if err == nil {
 		t.Fatal("expected error for cancelled context")
 	}
