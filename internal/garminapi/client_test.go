@@ -318,6 +318,46 @@ func TestConnectAPI_Unauthorized_RefreshSuccess(t *testing.T) {
 	}
 }
 
+func TestConnectAPI_Unauthorized_RefreshCallsOnTokenRefresh(t *testing.T) {
+	calls := 0
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		if calls == 1 {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"ok":true}`))
+	})
+
+	_, client := testServer(t, handler)
+
+	origRefresh := refreshTokensFn
+	t.Cleanup(func() { refreshTokensFn = origRefresh })
+	refreshTokensFn = func(_ context.Context, tokens *garminauth.Tokens, _ garminauth.LoginOptions) (*garminauth.Tokens, error) {
+		newTokens := *tokens
+		newTokens.OAuth2AccessToken = "refreshed-token"
+		newTokens.OAuth2ExpiresAt = time.Now().Add(time.Hour)
+		return &newTokens, nil
+	}
+
+	var callbackCalled bool
+	client.OnTokenRefresh = func(tokens *garminauth.Tokens) {
+		callbackCalled = true
+		if tokens.OAuth2AccessToken != "refreshed-token" {
+			t.Errorf("callback token = %q, want refreshed-token", tokens.OAuth2AccessToken)
+		}
+	}
+
+	_, err := client.ConnectAPI(context.Background(), http.MethodGet, "/api/path", nil)
+	if err != nil {
+		t.Fatalf("ConnectAPI: %v", err)
+	}
+	if !callbackCalled {
+		t.Error("OnTokenRefresh was not called during 401 refresh")
+	}
+}
+
 func TestConnectAPI_Unauthorized_RefreshFails(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
