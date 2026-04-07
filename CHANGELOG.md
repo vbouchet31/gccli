@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.1] - 2026-04-07
+
+### Fixed
+
+- **SSO rate limit retry** — Headless login now retries on HTTP 429/5xx from Garmin SSO with exponential backoff (2s, 5s, 10s), fixing intermittent "service ticket not found" failures
+
 ## [1.7.0] - 2026-04-07
 
 ### Fixed
@@ -200,6 +206,7 @@ Initial release of gccli — a fast, script-friendly CLI for Garmin Connect.
 - **CI pipeline** — GitHub Actions for fmt-check, lint, and test
 - **Cross-platform builds** — macOS (amd64/arm64) and Linux (amd64/arm64) via goreleaser
 
+[1.7.1]: https://github.com/bpauli/gccli/releases/tag/v1.7.1
 [1.7.0]: https://github.com/bpauli/gccli/releases/tag/v1.7.0
 [1.6.0]: https://github.com/bpauli/gccli/releases/tag/v1.6.0
 [1.5.0]: https://github.com/bpauli/gccli/releases/tag/v1.5.0
