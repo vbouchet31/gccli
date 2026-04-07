@@ -646,6 +646,60 @@ func TestRefreshToken_Success(t *testing.T) {
 	}
 }
 
+func TestRefreshToken_CallsOnTokenRefresh(t *testing.T) {
+	origRefresh := refreshTokensFn
+	t.Cleanup(func() { refreshTokensFn = origRefresh })
+	refreshTokensFn = func(_ context.Context, tokens *garminauth.Tokens, _ garminauth.LoginOptions) (*garminauth.Tokens, error) {
+		newTokens := *tokens
+		newTokens.OAuth2AccessToken = "callback-token"
+		newTokens.OAuth2ExpiresAt = time.Now().Add(time.Hour)
+		return &newTokens, nil
+	}
+
+	tokens := testTokens()
+	client := NewClient(tokens)
+
+	var called bool
+	var receivedTokens *garminauth.Tokens
+	client.OnTokenRefresh = func(t *garminauth.Tokens) {
+		called = true
+		receivedTokens = t
+	}
+
+	err := client.refreshToken(context.Background())
+	if err != nil {
+		t.Fatalf("refreshToken: %v", err)
+	}
+	if !called {
+		t.Fatal("OnTokenRefresh was not called")
+	}
+	if receivedTokens.OAuth2AccessToken != "callback-token" {
+		t.Errorf("received token = %q, want callback-token", receivedTokens.OAuth2AccessToken)
+	}
+}
+
+func TestRefreshToken_NilOnTokenRefresh(t *testing.T) {
+	origRefresh := refreshTokensFn
+	t.Cleanup(func() { refreshTokensFn = origRefresh })
+	refreshTokensFn = func(_ context.Context, tokens *garminauth.Tokens, _ garminauth.LoginOptions) (*garminauth.Tokens, error) {
+		newTokens := *tokens
+		newTokens.OAuth2AccessToken = "new-token"
+		return &newTokens, nil
+	}
+
+	tokens := testTokens()
+	client := NewClient(tokens)
+	// OnTokenRefresh is nil by default — must not panic.
+
+	err := client.refreshToken(context.Background())
+	if err != nil {
+		t.Fatalf("refreshToken: %v", err)
+	}
+	if client.tokens.OAuth2AccessToken != "new-token" {
+		t.Errorf("token = %q, want new-token", client.tokens.OAuth2AccessToken)
+	}
+}
+
 func TestRefreshToken_Failure(t *testing.T) {
 	origRefresh := refreshTokensFn
 	t.Cleanup(func() { refreshTokensFn = origRefresh })

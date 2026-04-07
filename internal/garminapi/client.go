@@ -20,6 +20,11 @@ type Client struct {
 	httpClient *http.Client
 	baseURL    string
 	tokens     *garminauth.Tokens
+
+	// OnTokenRefresh is called after a successful OAuth2 token refresh.
+	// Use this to persist refreshed tokens back to storage.
+	// If nil, no action is taken (tokens are only updated in-memory).
+	OnTokenRefresh func(tokens *garminauth.Tokens)
 }
 
 // ClientOption configures a Client.
@@ -194,5 +199,8 @@ func (c *Client) refreshToken(ctx context.Context) error {
 	}
 
 	c.tokens = newTokens
+	if c.OnTokenRefresh != nil {
+		c.OnTokenRefresh(newTokens)
+	}
 	return nil
 }
