@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/alecthomas/kong"
 
@@ -119,11 +120,24 @@ func run(parser *kong.Kong, cli *CLI, args []string) (code int) {
 	u := ui.New(colorMode)
 	ctx = ui.NewContext(ctx, u)
 
+	// Load config file for account and policy.
+	cfg, cfgErr := config.Read()
+
 	// Resolve account: flag/env → config file default.
 	account := cli.Account
-	if account == "" {
-		if cfg, err := config.Read(); err == nil {
-			account = cfg.Account()
+	if account == "" && cfgErr == nil {
+		account = cfg.Account()
+	}
+
+	// Check command policy (preflight).
+	if cfgErr == nil && cfg.Policy != nil {
+		commandPath := buildCommandPath(kongCtx)
+		// Skip policy check for auth commands to avoid lockout.
+		if !isAuthCommand(commandPath) {
+			if err := cfg.Policy.Check(commandPath); err != nil {
+				u.Error(fmt.Errorf("%s", err))
+				return 3 // Exit code 3 for policy rejection
+			}
 		}
 	}
 
@@ -141,4 +155,23 @@ func run(parser *kong.Kong, cli *CLI, args []string) (code int) {
 	}
 
 	return 0
+}
+
+// buildCommandPath returns the full subcommand path from a Kong context.
+// Kong's Command() method already returns the space-separated command path.
+// Example: "auth login" or "activity delete"
+func buildCommandPath(kongCtx *kong.Context) string {
+	if kongCtx == nil {
+		return ""
+	}
+	return kongCtx.Command()
+}
+
+// isAuthCommand returns true if the command is an auth subcommand that should bypass policy checks.
+func isAuthCommand(commandPath string) bool {
+	// Match by prefix to handle argument placeholders like "auth login <email>"
+	return strings.HasPrefix(commandPath, "auth login") ||
+		strings.HasPrefix(commandPath, "auth status") ||
+		strings.HasPrefix(commandPath, "auth export") ||
+		strings.HasPrefix(commandPath, "auth import")
 }

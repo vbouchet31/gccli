@@ -2,8 +2,10 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Environment variable names for configuration overrides.
@@ -14,7 +16,49 @@ const (
 	EnvJSON           = "GCCLI_JSON"
 	EnvPlain          = "GCCLI_PLAIN"
 	EnvKeyringBackend = "GCCLI_KEYRING_BACKEND"
+	EnvPolicy         = "GCCLI_POLICY"
 )
+
+// PolicyMode defines whether the policy operates as an allowlist or denylist.
+type PolicyMode string
+
+const (
+	PolicyModeAllow PolicyMode = "allowlist"
+	PolicyModeDeny  PolicyMode = "denylist"
+)
+
+// Policy defines the command execution policy.
+// Commands are matched by prefix against the full subcommand path (e.g. "activity delete").
+type Policy struct {
+	Mode  PolicyMode `json:"mode"`
+	Allow []string   `json:"allow,omitempty"`
+	Deny  []string   `json:"deny,omitempty"`
+}
+
+// Check returns an error if the given command path is not permitted by the policy.
+func (p *Policy) Check(commandPath string) error {
+	if p == nil {
+		return nil
+	}
+	switch p.Mode {
+	case PolicyModeAllow:
+		for _, entry := range p.Allow {
+			if commandPath == entry || strings.HasPrefix(commandPath, entry+" ") {
+				return nil
+			}
+		}
+		return fmt.Errorf("command %q is not in the allowlist", commandPath)
+	case PolicyModeDeny:
+		for _, entry := range p.Deny {
+			if commandPath == entry || strings.HasPrefix(commandPath, entry+" ") {
+				return fmt.Errorf("command %q is denied by policy", commandPath)
+			}
+		}
+		return nil
+	default:
+		return fmt.Errorf("unknown policy mode %q", p.Mode)
+	}
+}
 
 // File represents the on-disk configuration file.
 type File struct {
@@ -23,16 +67,39 @@ type File struct {
 	DomainName      string              `json:"domain,omitempty"`
 	DefaultFormat   string              `json:"default_format,omitempty"`
 	ActivitySummary map[string][]string `json:"activity_summary,omitempty"`
+	Policy          *Policy             `json:"policy,omitempty"`
 }
 
 // Read loads the configuration from the default config file path.
 // If the file does not exist, it returns a zero-value File (no error).
+// If GCCLI_POLICY env var is set, the policy is loaded from that file and overrides
+// any policy in the main config file.
 func Read() (*File, error) {
 	p, err := ConfigFilePath()
 	if err != nil {
 		return nil, err
 	}
-	return ReadFrom(p)
+	f, err := ReadFrom(p)
+	if err != nil {
+		return nil, err
+	}
+
+	// Allow overriding policy from a separate file via env var.
+	if policyPath := os.Getenv(EnvPolicy); policyPath != "" {
+		data, err := os.ReadFile(policyPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read policy file %q: %w", policyPath, err)
+		}
+		var policyWrapper struct {
+			Policy *Policy `json:"policy"`
+		}
+		if err := json.Unmarshal(data, &policyWrapper); err != nil {
+			return nil, fmt.Errorf("failed to parse policy file %q: %w", policyPath, err)
+		}
+		f.Policy = policyWrapper.Policy
+	}
+
+	return f, nil
 }
 
 // ReadFrom loads configuration from the given file path.
